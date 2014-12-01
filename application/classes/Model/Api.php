@@ -5,14 +5,14 @@ class Model_Api extends Model {
 	const API_BASE = 'https://api.guildwars2.com/v2/';
 	private $response = '';
 
-	function __construct($ext)
+	public function __construct($ext)
 	{
 		$request = Request::factory(self::API_BASE.$ext);
 		$json = $request->execute();
 		$this->response = json_decode($json, TRUE);
    }
 
-   function get_api_call()
+   public function get_decoded_data()
    {
    		return $this->response;
    }

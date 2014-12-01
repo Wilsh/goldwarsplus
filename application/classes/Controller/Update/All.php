@@ -6,7 +6,7 @@ class Controller_Update_All extends Controller {
 	{
 		$call = new Model_Allitems();
 		$view = new View('basic');
-		$view->param = $call->get_response();
+		$view->param = $call->get_num_added();
 		$this->response->body($view);
 	}
 
@@ -21,4 +21,4 @@ class Controller_Update_All extends Controller {
 		$this->response->body('Update commerce is working');
 	}
 
-} // End Welcome
+}

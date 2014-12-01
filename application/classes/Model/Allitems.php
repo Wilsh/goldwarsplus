@@ -1,13 +1,15 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 
+//retrieve all items from api and store in database
 class Model_Allitems extends Model {
 
 	private $result = NULL;
 	private $num_added = 0;
 
-	function __construct() {
+	public function __construct()
+	{
 		$api = new Model_Api('items');
-		$this->result = $api->get_api_call();
+		$this->result = $api->get_decoded_data();
 
 		if ($this->result)
 		{
@@ -33,9 +35,10 @@ class Model_Allitems extends Model {
 		{
 			//throw new Exception
 		}
-   }
+	}
 
-   function get_response() {
+	public function get_num_added()
+	{
 		return $this->num_added;
-   }
+	}
 }
