@@ -1,54 +1,5 @@
 [
     {
-        "name": "symfony/yaml",
-        "version": "v2.5.7",
-        "version_normalized": "2.5.7.0",
-        "target-dir": "Symfony/Component/Yaml",
-        "source": {
-            "type": "git",
-            "url": "https://github.com/symfony/Yaml.git",
-            "reference": "900d38bc8f74a50343ce65dd1c1e9819658ee56b"
-        },
-        "dist": {
-            "type": "zip",
-            "url": "https://api.github.com/repos/symfony/Yaml/zipball/900d38bc8f74a50343ce65dd1c1e9819658ee56b",
-            "reference": "900d38bc8f74a50343ce65dd1c1e9819658ee56b",
-            "shasum": ""
-        },
-        "require": {
-            "php": ">=5.3.3"
-        },
-        "time": "2014-11-20 13:22:25",
-        "type": "library",
-        "extra": {
-            "branch-alias": {
-                "dev-master": "2.5-dev"
-            }
-        },
-        "installation-source": "dist",
-        "autoload": {
-            "psr-0": {
-                "Symfony\\Component\\Yaml\\": ""
-            }
-        },
-        "notification-url": "https://packagist.org/downloads/",
-        "license": [
-            "MIT"
-        ],
-        "authors": [
-            {
-                "name": "Symfony Community",
-                "homepage": "http://symfony.com/contributors"
-            },
-            {
-                "name": "Fabien Potencier",
-                "email": "fabien@symfony.com"
-            }
-        ],
-        "description": "Symfony Yaml Component",
-        "homepage": "http://symfony.com"
-    },
-    {
         "name": "phpunit/php-text-template",
         "version": "1.2.0",
         "version_normalized": "1.2.0.0",
@@ -430,97 +381,6 @@
         ]
     },
     {
-        "name": "phing/phing",
-        "version": "dev-master",
-        "version_normalized": "9999999-dev",
-        "source": {
-            "type": "git",
-            "url": "https://github.com/phingofficial/phing.git",
-            "reference": "eb1b9fc02c72fd724922641bc2ecce16415593aa"
-        },
-        "dist": {
-            "type": "zip",
-            "url": "https://api.github.com/repos/phingofficial/phing/zipball/eb1b9fc02c72fd724922641bc2ecce16415593aa",
-            "reference": "eb1b9fc02c72fd724922641bc2ecce16415593aa",
-            "shasum": ""
-        },
-        "require": {
-            "php": ">=5.2.0"
-        },
-        "require-dev": {
-            "ext-pdo_sqlite": "*",
-            "lastcraft/simpletest": "@dev",
-            "pdepend/pdepend": "1.x",
-            "pear-pear.php.net/http_request2": "2.2.x",
-            "pear-pear.php.net/net_growl": "2.7.x",
-            "pear-pear.php.net/pear_packagefilemanager": "1.7.x",
-            "pear-pear.php.net/pear_packagefilemanager2": "1.0.x",
-            "pear-pear.php.net/xml_serializer": "0.20.x",
-            "pear/pear_exception": "@dev",
-            "pear/versioncontrol_git": "@dev",
-            "pear/versioncontrol_svn": "@dev",
-            "phpdocumentor/phpdocumentor": "2.x",
-            "phploc/phploc": "2.x",
-            "phpunit/phpunit": ">=3.7",
-            "sebastian/phpcpd": "2.x",
-            "squizlabs/php_codesniffer": "1.5.x"
-        },
-        "suggest": {
-            "pdepend/pdepend": "PHP version of JDepend",
-            "pear/archive_tar": "Tar file management class",
-            "pear/versioncontrol_git": "A library that provides OO interface to handle Git repository",
-            "pear/versioncontrol_svn": "A simple OO-style interface for Subversion, the free/open-source version control system",
-            "phpdocumentor/phpdocumentor": "Documentation Generator for PHP",
-            "phploc/phploc": "A tool for quickly measuring the size of a PHP project",
-            "phpmd/phpmd": "PHP version of PMD tool",
-            "phpunit/php-code-coverage": "Library that provides collection, processing, and rendering functionality for PHP code coverage information",
-            "phpunit/phpunit": "The PHP Unit Testing Framework",
-            "sebastian/phpcpd": "Copy/Paste Detector (CPD) for PHP code",
-            "tedivm/jshrink": "Javascript Minifier built in PHP"
-        },
-        "time": "2014-11-27 10:22:25",
-        "bin": [
-            "bin/phing"
-        ],
-        "type": "library",
-        "extra": {
-            "branch-alias": {
-                "dev-master": "2.9.x-dev"
-            }
-        },
-        "installation-source": "source",
-        "autoload": {
-            "classmap": [
-                "classes/phing/"
-            ]
-        },
-        "notification-url": "https://packagist.org/downloads/",
-        "include-path": [
-            "classes"
-        ],
-        "license": [
-            "LGPL-3.0"
-        ],
-        "authors": [
-            {
-                "name": "Phing Community",
-                "homepage": "http://www.phing.info/trac/wiki/Development/Contributors"
-            },
-            {
-                "name": "Michiel Rook",
-                "email": "mrook@php.net"
-            }
-        ],
-        "description": "PHing Is Not GNU make; it's a PHP project build system or build tool based on Apache Ant.",
-        "homepage": "http://www.phing.info/",
-        "keywords": [
-            "build",
-            "phing",
-            "task",
-            "tool"
-        ]
-    },
-    {
         "name": "twig/twig",
         "version": "v1.16.2",
         "version_normalized": "1.16.2.0",
@@ -577,6 +437,146 @@
         "homepage": "http://twig.sensiolabs.org",
         "keywords": [
             "templating"
+        ]
+    },
+    {
+        "name": "symfony/yaml",
+        "version": "v2.6.1",
+        "version_normalized": "2.6.1.0",
+        "target-dir": "Symfony/Component/Yaml",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/symfony/Yaml.git",
+            "reference": "3346fc090a3eb6b53d408db2903b241af51dcb20"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/symfony/Yaml/zipball/3346fc090a3eb6b53d408db2903b241af51dcb20",
+            "reference": "3346fc090a3eb6b53d408db2903b241af51dcb20",
+            "shasum": ""
+        },
+        "require": {
+            "php": ">=5.3.3"
+        },
+        "time": "2014-12-02 20:19:20",
+        "type": "library",
+        "extra": {
+            "branch-alias": {
+                "dev-master": "2.6-dev"
+            }
+        },
+        "installation-source": "dist",
+        "autoload": {
+            "psr-0": {
+                "Symfony\\Component\\Yaml\\": ""
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "MIT"
+        ],
+        "authors": [
+            {
+                "name": "Symfony Community",
+                "homepage": "http://symfony.com/contributors"
+            },
+            {
+                "name": "Fabien Potencier",
+                "email": "fabien@symfony.com"
+            }
+        ],
+        "description": "Symfony Yaml Component",
+        "homepage": "http://symfony.com"
+    },
+    {
+        "name": "phing/phing",
+        "version": "dev-master",
+        "version_normalized": "9999999-dev",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/phingofficial/phing.git",
+            "reference": "393edeffa8a85d43636ce0c9b4deb1ff9ac60a5c"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/phingofficial/phing/zipball/393edeffa8a85d43636ce0c9b4deb1ff9ac60a5c",
+            "reference": "393edeffa8a85d43636ce0c9b4deb1ff9ac60a5c",
+            "shasum": ""
+        },
+        "require": {
+            "php": ">=5.2.0"
+        },
+        "require-dev": {
+            "ext-pdo_sqlite": "*",
+            "lastcraft/simpletest": "@dev",
+            "pdepend/pdepend": "1.x",
+            "pear-pear.php.net/http_request2": "2.2.x",
+            "pear-pear.php.net/net_growl": "2.7.x",
+            "pear-pear.php.net/pear_packagefilemanager": "1.7.x",
+            "pear-pear.php.net/pear_packagefilemanager2": "1.0.x",
+            "pear-pear.php.net/xml_serializer": "0.20.x",
+            "pear/pear_exception": "@dev",
+            "pear/versioncontrol_git": "@dev",
+            "pear/versioncontrol_svn": "@dev",
+            "phpdocumentor/phpdocumentor": "2.x",
+            "phploc/phploc": "2.x",
+            "phpunit/phpunit": ">=3.7",
+            "sebastian/phpcpd": "2.x",
+            "squizlabs/php_codesniffer": "1.5.x"
+        },
+        "suggest": {
+            "pdepend/pdepend": "PHP version of JDepend",
+            "pear/archive_tar": "Tar file management class",
+            "pear/versioncontrol_git": "A library that provides OO interface to handle Git repository",
+            "pear/versioncontrol_svn": "A simple OO-style interface for Subversion, the free/open-source version control system",
+            "phpdocumentor/phpdocumentor": "Documentation Generator for PHP",
+            "phploc/phploc": "A tool for quickly measuring the size of a PHP project",
+            "phpmd/phpmd": "PHP version of PMD tool",
+            "phpunit/php-code-coverage": "Library that provides collection, processing, and rendering functionality for PHP code coverage information",
+            "phpunit/phpunit": "The PHP Unit Testing Framework",
+            "sebastian/phpcpd": "Copy/Paste Detector (CPD) for PHP code",
+            "tedivm/jshrink": "Javascript Minifier built in PHP"
+        },
+        "time": "2014-12-03 09:18:46",
+        "bin": [
+            "bin/phing"
+        ],
+        "type": "library",
+        "extra": {
+            "branch-alias": {
+                "dev-master": "2.9.x-dev"
+            }
+        },
+        "installation-source": "source",
+        "autoload": {
+            "classmap": [
+                "classes/phing/"
+            ]
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "include-path": [
+            "classes"
+        ],
+        "license": [
+            "LGPL-3.0"
+        ],
+        "authors": [
+            {
+                "name": "Phing Community",
+                "homepage": "http://www.phing.info/trac/wiki/Development/Contributors"
+            },
+            {
+                "name": "Michiel Rook",
+                "email": "mrook@php.net"
+            }
+        ],
+        "description": "PHing Is Not GNU make; it's a PHP project build system or build tool based on Apache Ant.",
+        "homepage": "http://www.phing.info/",
+        "keywords": [
+            "build",
+            "phing",
+            "task",
+            "tool"
         ]
     }
 ]
