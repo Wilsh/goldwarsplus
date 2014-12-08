@@ -2,6 +2,6 @@
 	"require": {
 		"phpunit/phpunit": "3.7.24",
 		"phing/phing": "dev-master",
-		"twig/twig": "~1.0"
+		"tommcdo/kohana-twig": "1.0.*"
 	}
 }
