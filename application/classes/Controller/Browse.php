@@ -4,7 +4,9 @@ class Controller_Browse extends Controller {
 
 	public function action_index()
 	{
-		$this->response->body('hello, world!2');
+		$twig = Twig::factory('template');
+		$twig->text = 'hello, world!';
+		$this->response->body($twig); 
 	}
 
 } // End Welcome

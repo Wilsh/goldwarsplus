@@ -17,7 +17,7 @@ class Model_Filter extends Model {
 
 			$query = DB::select('id')
 					->from('all_items')
-					//->where('evaluated', '=', FALSE)
+					->where('evaluated', '=', FALSE)
 					->offset($offset)
 					->limit($max);
 			$result = $query->execute();
