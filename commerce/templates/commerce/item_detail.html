@@ -1,0 +1,89 @@
+{% extends "commerce/base.html" %}
+{% load static %}
+{% load commerce_extras %}
+
+{% block title %}
+    Item Detail - {{ item_info.name }}
+{% endblock %}
+
+{% block content %}
+    <h1 class="{{ item_info.rarity|lower }}">{{ item_info.name }}</h1>
+    <dl class="dl-horizontal">
+        <dt>Item ID:</dt><dd>{{ item_info.item_id }}</dd>
+        <dt>Icon:</dt><dd><img src="{% static commerce %}commerce/items/{{ item_info.icon.static_id }}" height="35" width="35" alt="item icon" /></dd>
+        <dt>Chat Link:</dt><dd>{{ item_info.chat_link }}</dd>
+        <dt>Description:</dt><dd>{{ item_info.description }}</dd>
+        <dt>Type:</dt><dd>{{ item_info.type }}</dd>
+        <dt>Rarity:</dt><dd>{{ item_info.rarity }}</dd>
+        <dt>Level:</dt><dd>{{ item_info.level }}</dd>
+        <dt>Tradeable:</dt><dd>
+            {% if item_info.seen_on_trading_post %}
+                Yes
+            {% else %}
+                No
+            {% endif %}
+            </dd>
+        {% if item_info.seen_on_trading_post %}
+            <dt>Purchase Price:</dt><dd>{% show_coins item_info.get_market_buy %}</dd>
+        {% endif %}
+        {% if item_info.vendor_value %}
+            <dt>Vendor Value:</dt><dd>{% show_coins item_info.vendor_value %}</dd>
+        {% endif %}
+        <dt>Added:</dt><dd>{{ item_info.date_added }}</dd>
+    </dl>
+
+    {% for recipe in item_info.recipe_set.all %}
+        {% if forloop.first %}<h3>Recipe{% if item_info.recipe_set.all|length > 1 %}s{% endif %} for {{ item_info.name }}</h3>{% endif %}
+        <dl class="dl-horizontal">
+            <dt>Recipe ID:</dt><dd>{{ recipe.recipe_id }}</dd>
+            <dt>Type:</dt><dd>{{ recipe.type }}</dd>
+            <dt>Number Created</dt><dd>{{ recipe.output_item_count }}</dd>
+            <dt>Disciplines:</dt><dd>
+                {% for discipline, exists in recipe.recipediscipline.get_disciplines %}
+                    {% if exists %}
+                        <img src="{% static commerce %}commerce/{{ discipline|lower }}.png" height="26" alt="{{ discipline|lower }} icon" />
+                    {% endif %}
+                {% endfor %}
+                </dd>
+            <dt>Minimum Rating</dt><dd>{{ recipe.min_rating }}</dd>
+            <dt>Learned:</dt><dd>
+                {% if recipe.AutoLearned %}Automatically
+                {% elif recipe.LearnedFromItem %}From Item
+                {% else %}By Discovery
+                {% endif %}
+                </dd>
+            <dt>Added:</dt><dd>{{ recipe.date_added }}</dd>
+            <dt>Ingredients:</dt><dd>
+                <div class="col-md-7">
+                <table class="table table-hover table-condensed text-right">
+                    <tr>
+                        <th class="text-left"></th>
+                        <th class="text-left">Name</th>
+                        <th class="text-left">Count</th>
+                        <th class="text-right">Unit Cost</th>
+                    </tr>
+                    {% for ingredient in recipe.recipeingredient_set.all %}
+                    <tr class="{{ ingredient.item_id.rarity|lower }}">
+                        <td class="text-left"><img src="{% static commerce %}commerce/items/{{ ingredient.item_id.icon.static_id }}" height="25" width="25" alt="item icon" /></td>
+                        <td class="text-left"><a href="{% url 'commerce:item_detail' ingredient.item_id.item_id %}"><strong>{{ ingredient.item_id.name }}</strong></a></td>
+                        <td class="text-left">{{ ingredient.count }}</td>
+                        <td>
+                            {% if ingredient.item_id.selllisting_set.first.unit_price %}
+                                {% show_coins ingredient.item_id.selllisting_set.first.unit_price %}
+                            {% else %}
+                                Not Available
+                            {% endif %}
+                            </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+                </div>
+            </dd>
+        </dl>
+    {% endfor %}
+    
+    {% if item_info.seen_on_trading_post and item_info.can_be_crafted %}
+        <h3>Cheapest method to obtain:</h3>
+        {% show_crafting_tree item_info.buy_or_craft %}
+    {% endif %}
+{% endblock %}

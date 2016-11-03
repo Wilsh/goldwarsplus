@@ -1,0 +1,14 @@
+{% load commerce_extras %}
+
+<tr class="text-left"><td></td><td>
+{% for line in context.0 %}
+    {{ line }} <br>
+{% endfor %}
+
+{% if context.1 %}
+    <h4>Shopping List:</h4>
+    {% for name in context.1 %}
+        {{ context.1|get_item:name }} {{ name }}<br>
+    {% endfor %}
+{% endif %}
+</td></tr>

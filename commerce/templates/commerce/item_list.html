@@ -1,0 +1,51 @@
+{% extends "commerce/base.html" %}
+{% load static %}
+{% load commerce_extras %}
+
+{% block title %}
+    Browse Items
+{% endblock %}
+
+{% block content %}
+    <table class="table table-hover table-condensed text-right">
+        <tr>
+            <th class="text-left">Item ID</th>
+            <th class="text-left">Icon</th>
+            <th class="text-left">Name</th>
+            <th class="text-right">Type</th>
+            <th class="text-right">Level</th>
+            <th class="text-right">Vendor Value</th>
+        </tr>
+    {% for item in item_list %}
+        <tr class="{{ item.rarity|lower }}">
+            <td class="text-left">{{ item.item_id }}</td>
+            <td class="text-left"><img src="{% static commerce %}commerce/items/{{ item.icon.static_id }}" height="30" width="30" alt="item icon" />
+            <td class="text-left"><a href="{% url 'commerce:item_detail' item.item_id %}"><strong>{{ item.name }}</strong></a></td>
+            <td>{{ item.type }}</td>
+            <td>{{ item.level }}</td>
+            <td>
+                {% if item.vendor_value %}
+                    {% show_coins item.vendor_value %}
+                {% endif %}
+                </td>
+        </tr>
+    {% endfor %}
+    </table>
+    {% if is_paginated %}
+    <div class="row">
+        <div class="col-md-1 col-md-offset-1 text-right">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+        {% endif %}
+        </div>
+        <div class="col-md-2 text-center">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </div>
+        {% if page_obj.has_next %}
+        <div class="col-md-1 text-left">
+            <a href="?page={{ page_obj.next_page_number }}">next</a>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+{% endblock %}

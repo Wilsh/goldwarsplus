@@ -1,0 +1,53 @@
+/* .table .junk {background-color: #f1f1f1;} 
+.table .fine {background-color: #d9edf7;}
+.table .masterwork {background-color: #dbf7d0;}
+.table .rare {background-color: #ffff9f;}
+.table .exotic {background-color: #ffe5b7;}
+.table .ascended {background-color: #ffe3ef;}
+.table .legendary {background-color: #e8dbfb;} */
+
+.table  {background-color: #fdfdfd;}
+
+.table>tbody>tr>td {vertical-align: middle;}
+
+/* .table-hover>tbody>tr.junk:hover  {background-color: #e4e4e4;}
+.table-hover>tbody>tr.fine:hover  {background-color: #b4def5;}
+.table-hover>tbody>tr.masterwork:hover  {background-color: #bdecaa;}
+.table-hover>tbody>tr.rare:hover  {background-color: #f9f971;}
+.table-hover>tbody>tr.exotic:hover  {background-color: #f7d290;}
+.table-hover>tbody>tr.ascended:hover  {background-color: #f9c3da;}
+.table-hover>tbody>tr.legendary:hover  {background-color: #d2bbf3;} */
+.table-hover>tbody>tr.junk:hover  {background-color: #f1f1f1;}
+.table-hover>tbody>tr.fine:hover  {background-color: #d9edf7;}
+.table-hover>tbody>tr.masterwork:hover  {background-color: #dbf7d0;}
+.table-hover>tbody>tr.rare:hover  {background-color: #ffff9f;}
+.table-hover>tbody>tr.exotic:hover  {background-color: #ffe5b7;}
+.table-hover>tbody>tr.ascended:hover  {background-color: #ffe3ef;}
+.table-hover>tbody>tr.legendary:hover  {background-color: #e8dbfb;}
+
+
+.table  .junk a:link{color: #868686;}
+.table  .junk a:visited{color: #868686;}
+.table  .basic a:link{color: #000000;}
+.table  .basic a:visited{color: #000000;}
+.table  .fine a:link{color: #62a4da;}
+.table  .fine a:visited{color: #62a4da;}
+.table  .masterwork a:link{color: #1a9306;}
+.table  .masterwork a:visited{color: #1a9306;}
+.table  .rare a:link{color: #fcd00b;}
+.table  .rare a:visited{color: #fcd00b;}
+.table  .exotic a:link{color: #ffa405;}
+.table  .exotic a:visited{color: #ffa405;}
+.table  .ascended a:link{color: #fb3e8d;}
+.table  .ascended a:visited{color: #fb3e8d;}
+.table  .legendary a:link{color: #4c139d;}
+.table  .legendary a:visited{color: #4c139d;}
+
+h1.junk {color: #868686;}
+h1.basic {color: #000000;}
+h1.fine {color: #62a4da;}
+h1.masterwork {color: #1a9306;}
+h1.rare {color: #fcd00b;}
+h1.exotic {color: #ffa405;}
+h1.ascended {color: #fb3e8d;}
+h1.legendary {color: #4c139d;}

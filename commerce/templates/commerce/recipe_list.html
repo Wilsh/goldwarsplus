@@ -1,0 +1,52 @@
+{% extends "commerce/base.html" %}
+{% load static %}
+
+{% block title %}
+    Browse Recipes
+{% endblock %}
+
+{% block content %}
+    <table class="table table-hover table-condensed text-right">
+        <tr>
+            <th class="text-left">Recipe ID</th>
+            <th class="text-left">Icon</th>
+            <th class="text-left">Name</th>
+            <th class="text-left">Type</th>
+            <th class="text-left">Disciplines</th>
+            <th class="text-left">Minimum Rating</th>
+        </tr>
+    {% for recipe in recipe_list %}
+        <tr class="{{ recipe.output_item_id.rarity|lower }}">
+            <td class="text-left">{{ recipe.recipe_id }}</td>
+            <td class="text-left"><img src="{% static commerce %}commerce/items/{{ recipe.output_item_id.icon.static_id }}" height="30" width="30" alt="item icon" />
+            <td class="text-left"><a href="{% url 'commerce:item_detail' recipe.output_item_id.item_id %}"><strong>{{ recipe.output_item_id.name }}</strong></a></td>
+            <td class="text-left">{{ recipe.type }}</td>
+            <td class="text-left">
+                {% for discipline, exists in recipe.recipediscipline.get_disciplines %}
+                    {% if exists %}
+                        <img src="{% static commerce %}commerce/{{ discipline|lower }}.png" height="26" alt="{{ discipline|lower }} icon" />
+                    {% endif %}
+                {% endfor %}
+                </td>
+            <td class="text-left">{{ recipe.min_rating }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+    {% if is_paginated %}
+    <div class="row">
+        <div class="col-md-1 col-md-offset-1 text-right">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+        {% endif %}
+        </div>
+        <div class="col-md-2 text-center">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </div>
+        {% if page_obj.has_next %}
+        <div class="col-md-1 text-left">
+            <a href="?page={{ page_obj.next_page_number }}">next</a>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+{% endblock %}

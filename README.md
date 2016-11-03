@@ -1,6 +1,8 @@
 goldwarsplus
 ============
 
-Kohana-based app that analyzes trading post data from the Guild Wars 2 API
+A Django-based web app that analyzes trading post data from the Guild Wars 2 API
 
-Not affiliated with Gold Wars 2
+Django 1.10
+Python 3.5
+PostgreSQL 9.5.4
