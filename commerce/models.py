@@ -2,6 +2,8 @@ from django.db import models
 from django.utils import timezone
 from urllib.request import urlretrieve
 import hashlib
+import os
+from django.conf import settings
 from math import ceil
 
 # Create your models here.
@@ -182,8 +184,7 @@ class Icon(models.Model):
     def add_details(self):
         self.static_id = hashlib.md5(self.url.encode('utf-8')).hexdigest()
         self.static_id += '.png'
-        #TODO: avoid using an absolute path
-        urlretrieve(self.url, '/home/turbobear/goldwarsplus/commerce/static/commerce/items/' + self.static_id)
+        urlretrieve(self.url, os.path.join(settings.BASE_DIR, 'commerce/static/commerce/items/') + self.static_id)
 
 class Recipe(models.Model):
     '''All recipes for craftable Items discovered by
