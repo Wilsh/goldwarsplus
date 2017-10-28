@@ -4,7 +4,6 @@ from . import views
 app_name = 'commerce'
 urlpatterns = [
     url(r'^$', views.index, name='index'),
-    url(r'^update/$', views.UpdateForm.as_view(), name='update'),
     url(r'^items/$', views.ItemListView.as_view(), name='item_list'),
     url(r'^items/detail/(?P<pk>[0-9]+)/$', views.ItemDetailView.as_view(), name='item_detail'),
     url(r'^recipes/$', views.RecipeListView.as_view(), name='recipe_list'),
