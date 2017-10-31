@@ -123,57 +123,5 @@ def update_buy_sell_listings(item, buy_or_sell, context):
         entry.economicsforitem.save()
 
 context = {}
-#update_crafting_material_listings(context)
-#print(context)
-
-
-# for item in Item.objects.all():
-    # if item.seen_on_trading_post and item.recipe_set.count() > 1:
-        # print(str(item.item_id)+' '+item.name)
-
-# list = [['Lump of Tin', 80],
-# ['Lump of Coal', 16],
-# ['Lump of Primordium', 480]]
-# for itemname, cost in list:
-    # a = Item.objects.get(name=itemname)
-    # a.can_purchase_from_vendor = True
-    # a.vendor_price = cost
-    # a.save()
-    # a.selllisting_set.all().delete()
-    # new_entry = SellListing(for_item=a)
-    # new_entry.add_details({'quantity':99999,'unit_price':cost})
-    # new_entry.save()
-    
-# for item in Item.objects.filter(seen_on_trading_post=True):
-    # entry = EconomicsForItem(for_item=item)
-    # entry.save()
-
-# for item in Recipe.objects.all():
-    # entry = EconomicsForRecipe(for_recipe=item)
-    # entry.save()
-
-# for item in Item.objects.all():
-    # if item.recipe_set.exists():
-        # item.can_be_crafted = True
-        # item.save()
-
-# a = EconomicsForItem.objects.all().order_by('-price_change_count')
-# b = 0
-# print(a[22].price_change_count)
-# for item in a:
-    # if b > 22:
-        # break
-    # item.price_change_count = 0
-    # item.save()
-    # b += 1
-# print(a[22].price_change_count)
-
-# list = ['Clay Pot', 'Grow Lamp', 'Plate of Meaty Plant Food', 'Plate of Piquant Plant Food',
-# 'Vial of Maize Balm', 'Glob of Elder Spirit Residue', 'Lump of Mithrillium', 
-# 'Spool of Silk Weaving Thread', 'Spool of Thick Elonian Cord', 'Heat Stone'
-# ]
-# for itemname in list:
-    # a = Item.objects.get(name=itemname)
-    # for recipe in a.recipe_set.all():
-        # recipe.economicsforrecipe.limited_production = True
-        # recipe.economicsforrecipe.save()
+update_crafting_material_listings(context)
+print(context)

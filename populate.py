@@ -1,10 +1,11 @@
 #!/usr/bin/python3.5
 #in command prompt:
 #export DJANGO_SETTINGS_MODULE=goldwarsplus.settings
+
 import sys
-sys.path.append('/home/turbobear/goldwarsplus/')
 import django
 from django.conf import settings
+sys.path.append(settings.BASE_DIR)
 django.setup()
 
 from django.urls import reverse
@@ -16,7 +17,6 @@ import time
 from django.utils import timezone
 import os.path
 
-from commerce.forms import UpdateForm
 from commerce.models import Item, ItemFlag, EconomicsForItem, Icon, Recipe, EconomicsForRecipe, RecipeDiscipline, RecipeIngredient, BuyListing, SellListing
 
 def get_api_data(url_postfix, context):
@@ -37,14 +37,18 @@ def find_listed_items(context):
     set each Item's seen_on_trading_post field as True'''
     item_list = get_api_data('commerce/listings', context)
     if not item_list:
-        #API error
+        context['api error'] = "no response from api"
         return
     total_updated = 0
+    known_bad = ['36401', '82171', '82438', '82765', '82975', '82989', '83193', 
+        '83271', '83326', '83672', '83935', '84002', '84004', '84085', '84158', 
+        '84220', '84325', '84413', '84540', '84632', '84732', '85499']
     for item in item_list:
         try:
             update = Item.objects.get(item_id=item)
         except Item.DoesNotExist:
-            print('Item ' + str(item) + ' does not exist')
+            if not str(item) in known_bad:
+                print('Item ' + str(item) + ' does not exist')
             continue
         if update.seen_on_trading_post == False:
             update.seen_on_trading_post = True
@@ -110,7 +114,7 @@ def update_buy_sell_listings(item, buy_or_sell, context):
     added_vendor_listing = False
     for listing in item[buy_or_sell]:
         #limit saved listings to 10
-        if counter < 4:
+        if counter < 10:
             #create listing
             if listing['quantity'] > 0 and listing['unit_price'] > 0:
                 #only need one buy listing
@@ -180,14 +184,54 @@ def calculate_recipe_cost(context):
             economics.save()
     context['profitable_recipes_found'] = num_updated
 
+def set_vendor_items():
+    '''Update SellListings for Items that can be bought from vendors and flag
+    Items that have a time-limited production'''
+    list = [['Lump of Tin', 8],
+    ['Lump of Coal', 16],
+    ['Lump of Primordium', 48],
+    ['Spool of Jute Thread', 8],
+    ['Spool of Wool Thread', 16],
+    ['Spool of Cotton Thread', 24],
+    ['Spool of Linen Thread', 32],
+    ['Spool of Silk Thread', 48],
+    ['Spool of Gossamer Thread', 64],
+    ['Thermocatalytic Reagent', 150],
+    ["Crafter's Backpack Frame", 8],
+    ['Minor Rune of Holding', 496],
+    ['Rune of Holding', 1480],
+    ['Major Rune of Holding', 5000],
+    ['Greater Rune of Holding', 20000],
+    ['Superior Rune of Holding', 100000],
+    ['Jug of Water', 8],
+    ]
+    for itemname, cost in list:
+        a = Item.objects.get(name=itemname)
+        a.can_purchase_from_vendor = True
+        a.vendor_price = cost
+        a.save()
+        a.selllisting_set.all().delete()
+        new_entry = SellListing(for_item=a)
+        new_entry.add_details({'quantity':99999,'unit_price':cost})
+        new_entry.save()
+
+    list = ['Clay Pot', 'Grow Lamp', 'Plate of Meaty Plant Food', 'Plate of Piquant Plant Food',
+    'Vial of Maize Balm', 'Glob of Elder Spirit Residue', 'Lump of Mithrillium', 
+    'Spool of Silk Weaving Thread', 'Spool of Thick Elonian Cord', 'Heat Stone',
+    ]
+    for itemname in list:
+        a = Item.objects.get(name=itemname)
+        for recipe in a.recipe_set.all():
+            recipe.economicsforrecipe.limited_production = True
+            recipe.economicsforrecipe.save()
 
 print(timezone.now())
 context = {}
 find_listed_items(context) #40 sec
 print(context)
 EconomicsForItem.objects.update(relist_profit=0)
-# get_commerce_listings(context, 23600) #35 min
-get_commerce_listings(context) #35 min
+# get_commerce_listings(context, 23600)
+get_commerce_listings(context) #25 min
 try:
     if context['get_commerce_listings_failed_at_begin']:
         print(context)
@@ -197,4 +241,5 @@ except KeyError:
 # calculate_recipe_cost(context) #12 min
 print(timezone.now())
 print(context)
-
+#run the following once for a new database:
+set_vendor_items()
