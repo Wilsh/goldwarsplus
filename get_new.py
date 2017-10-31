@@ -134,11 +134,21 @@ def get_api_objects(api_endpoint, context):
         context['total_recipes_added'] = total_added
 
 print(timezone.now())
-context = {}
+context = {'total_items_added':0, 'total_recipes_added':0}
 print("checking for new items")
 get_api_objects('items', context) #36 min for empty database
 print(timezone.now())
 print("checking for new recipes")
 get_api_objects('recipes', context) #5 min for empty database
 print(timezone.now())
+try:
+    if context['api_error']:
+        pass
+except KeyError:
+    if context['total_items_added'] or context['total_recipes_added']:
+        print("updating new items")
+        for item in Item.objects.all():
+            if item.recipe_set.exists():
+                item.can_be_crafted = True
+                item.save()
 print(context)
