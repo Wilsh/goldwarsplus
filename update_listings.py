@@ -1,13 +1,15 @@
-#!/usr/bin/python3.5
+#!/usr/bin/python3.6
 #in command prompt:
-#export DJANGO_SETTINGS_MODULE=goldwarsplus.settings
+#export DJANGO_SETTINGS_MODULE=website.settings
+
 import sys
-sys.path.append('/home/turbobear/goldwarsplus/')
 import django
 from django.conf import settings
+sys.path.append(settings.BASE_DIR)
 django.setup()
 
 from django.urls import reverse
+from django.db.models import F
 from urllib.request import Request, urlopen, urlretrieve
 from urllib.error import URLError, HTTPError
 import json
@@ -15,7 +17,6 @@ import time
 from django.utils import timezone
 import os.path
 
-from commerce.forms import UpdateForm
 from commerce.models import Item, ItemFlag, EconomicsForItem, Icon, Recipe, EconomicsForRecipe, RecipeDiscipline, RecipeIngredient, BuyListing, SellListing
 
 def get_api_data(url_postfix, context):
@@ -85,7 +86,7 @@ def update_buy_sell_listings(item, buy_or_sell, context):
     added_vendor_listing = False
     for listing in item[buy_or_sell]:
         #limit saved listings to 10
-        if counter < 4:
+        if counter < 10:
             #create listing
             if listing['quantity'] > 0 and listing['unit_price'] > 0:
                 #only need one buy listing
@@ -97,7 +98,8 @@ def update_buy_sell_listings(item, buy_or_sell, context):
                 elif buy_or_sell == 'sells':
                     #detect price fluctuations to optimize listing update frequency
                     if counter == 0 and abs(listing['unit_price'] - old_price) > (old_price * 0.05):
-                        entry.economicsforitem.update(price_change_count=F('price_change_count') + 1)
+                        #entry.economicsforitem.update(price_change_count=F('price_change_count') + 1)
+                        EconomicsForItem.objects.filter(for_item=entry).update(price_change_count=F('price_change_count') + 1)
                     #now add sell listing
                     new_entry = SellListing(for_item=entry)
                     if entry.can_purchase_from_vendor:
@@ -122,6 +124,9 @@ def update_buy_sell_listings(item, buy_or_sell, context):
         entry.economicsforitem.relist_profit = profit
         entry.economicsforitem.save()
 
+print(timezone.now())
+print("Updating auction prices for crafting materials")
 context = {}
 update_crafting_material_listings(context)
+print(timezone.now())
 print(context)

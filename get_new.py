@@ -1,4 +1,4 @@
-#!/usr/bin/python3.5
+#!/usr/bin/python3.6
 #run in command prompt first:
 #export DJANGO_SETTINGS_MODULE=website.settings
 
@@ -81,6 +81,15 @@ def get_api_objects(api_endpoint, context):
                         item_icon = Icon(pk=object['icon'])
                         item_icon.add_details()
                         item_icon.save()
+                    except KeyError:
+                        #ignore item without icon (api bug)
+                        print(f"Item found with no corresponding icon, ID: {object['id']}")
+                        continue
+                    except Exception as e:
+                        print(f"Unchecked exception line 89: {type(e).__name__}, Item ID: {object['id']}")
+                        item_icon = Icon(pk=object['icon'])
+                        item_icon.add_details()
+                        item_icon.save()
                     #create Item entry
                     new_item = Item(icon=item_icon)
                     new_item.add_details(object)
@@ -93,13 +102,18 @@ def get_api_objects(api_endpoint, context):
                     try:
                         for_Item = Item.objects.get(pk=object['output_item_id'])
                     except Item.DoesNotExist:
-                        known_bad = ['82171', '82435', '82438', '82765', '82830', '83193', '83271', 
-                            '83326', '83354', '83459', '83672', '83935', '84002', '84004', '84085', 
-                            '84158', '84220', '84325', '84363', '84413', '84632', '84718']
+                        known_bad = ['9018', '36578', '39424', '39425', '89011', '89073', '89014', 
+                            '89394', '89407', '90002', '90083', '90088', '90089', '91275', '91362', 
+                            '91290', '91358', '91402', '92170', '92149', '92608', '92571', '92581', 
+                            '92651', '93297', '93301', '93305', '93314', '93674', '93684', '94114', 
+                            '94111', '94440', '94388', '94426', '94918', '94916', '94915', '94909', 
+                            '95066', '95042', '95257', '95250', '95400', '95372', '95357', '98209', 
+                            '98202', '98177', '98182', '98206', '98196', '98200', '98612', '98697'
+                            ]
                         if str(object['output_item_id']) in known_bad:
                             #ignore known error in api
                             continue
-                        context['api error using recipe ' + str(object['id'])] = 'Create Recipe ' + str(object['id']) + ' failed: related Item ' + str(object['output_item_id']) + ' does not exist'
+                        context['api_error'] = 'Create Recipe ' + str(object['id']) + ' failed: related Item ' + str(object['output_item_id']) + ' does not exist'
                         continue
                     #update can_be_crafted flag for Item
                     for_Item.can_be_crafted = True
@@ -117,8 +131,8 @@ def get_api_objects(api_endpoint, context):
                         try:
                             for_Item = Item.objects.get(pk=ingredient['item_id'])
                         except Item.DoesNotExist:
-                            context['api error using ingredient ' + str(object['id'])] = 'Create RecipeIngredient ' + str(object['id']) + ' failed: related Item ' + str(ingredient['item_id']) + ' does not exist'
-                            return
+                            print('Create RecipeIngredient ' + str(object['id']) + ' failed: related Item ' + str(ingredient['item_id']) + ' does not exist')
+                            continue
                         recipe_ingredient = RecipeIngredient(for_recipe=new_recipe, item_id=for_Item)
                         recipe_ingredient.add_details(ingredient)
                         recipe_ingredient.save()
