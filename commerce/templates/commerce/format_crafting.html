@@ -1,14 +1,39 @@
+{% load static %}
 {% load commerce_extras %}
 
-<tr class="text-left"><td></td><td>
+<table class="table table-hover table-condensed text-left">
 {% for line in context.0 %}
-    {{ line }} <br>
+    {% with item=line.3.0|get_item_model_by_id %}
+    <tr class="{{ item.rarity|lower }}"><td>
+    {{ line.0 }} 
+    {{ line.1 }} 
+    {{ line.2 }} 
+    <img src="{% static commerce %}commerce/items/{{ item.icon.static_id }}" height="25" width="25" alt="item icon" /> 
+    <a href="{% url 'commerce:item_detail' item.item_id %}"><strong>{{ item.name }}</strong></a>
+    for {{ line.4 }}
+    </td></tr>
+    {% endwith %}
 {% endfor %}
+</table>
 
 {% if context.1 %}
     <h4>Shopping List:</h4>
-    {% for name in context.1 %}
-        {{ context.1|get_item:name }} {{ name }}<br>
-    {% endfor %}
+    <div class="col-md-5">
+        <table class="table table-hover table-condensed text-right">
+            <tr>
+                <th class="text-right">Count</th>
+                <th class="text-right"></th>
+                <th class="text-left">Name</th>
+            </tr>
+            {% for entry in context.1 %}
+            {% with item=entry|get_item_model_by_id %}
+            <tr class="{{ item.rarity|lower }}">
+                <td class="text-right">{{ context.1|get_item:entry }}</td>
+                <td class="text-right"><img src="{% static commerce %}commerce/items/{{ item.icon.static_id }}" height="25" width="25" alt="item icon" /></td>
+                <td class="text-left"><a href="{% url 'commerce:item_detail' item.item_id %}"><strong>{{ item.name }}</strong></a></td>
+            </tr>
+            {% endwith %}
+            {% endfor %}
+        </table>
+    </div>
 {% endif %}
-</td></tr>

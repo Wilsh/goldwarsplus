@@ -1,6 +1,6 @@
-#!/usr/bin/python3.5
+#!/usr/bin/python3.6
 #in command prompt:
-#export DJANGO_SETTINGS_MODULE=goldwarsplus.settings
+#export DJANGO_SETTINGS_MODULE=website.settings
 
 import sys
 import django
@@ -37,12 +37,18 @@ def find_listed_items(context):
     set each Item's seen_on_trading_post field as True'''
     item_list = get_api_data('commerce/listings', context)
     if not item_list:
-        context['api error'] = "no response from api"
+        context['api_error'] = "no response from api"
         return
     total_updated = 0
-    known_bad = ['36401', '82171', '82438', '82765', '82975', '82989', '83193', 
-        '83271', '83326', '83672', '83935', '84002', '84004', '84085', '84158', 
-        '84220', '84325', '84413', '84540', '84632', '84732', '85499']
+    known_bad = ['9018', '9590', '14907', '14913', '14915', '14918', '20216', 
+        '21651', '36401', '36666', '37243', '37306', '37312', '37321', 
+        '37343', '37374', '37379', '37401', '37427', '37445', '37464',
+        '37492', '37505', '37513', '37525', '37531', '37534', '37558',
+        '37608', '37648', '37685', '37704', '37708', '37711', '37727',
+        '37732', '37756', '41592', '41598', '41607', '41636', '41667',
+        '41670', '41703', '41725', '41732', '43983', '43984', '43986',
+        '43987', '43988', '43999'
+        ]
     for item in item_list:
         try:
             update = Item.objects.get(item_id=item)
@@ -79,7 +85,7 @@ def get_commerce_listings(context, begin=0):
             item_list = get_api_data('commerce/listings?ids=' + end_url, context)
             if not item_list:
                 #API error
-                context['get_commerce_listings_failed_at_begin'] = begin
+                context['get_commerce_listings_failed_at'] = begin
                 return
             for item in item_list:
                 if update_buy_sell_listings(item, 'buys', context):
@@ -204,6 +210,7 @@ def set_vendor_items():
     ['Greater Rune of Holding', 20000],
     ['Superior Rune of Holding', 100000],
     ['Jug of Water', 8],
+    ['Milling Basin', 56]
     ]
     for itemname, cost in list:
         a = Item.objects.get(name=itemname)
@@ -227,19 +234,22 @@ def set_vendor_items():
 
 print(timezone.now())
 context = {}
+print("Checking for new items on the auction house")
 find_listed_items(context) #40 sec
 print(context)
 EconomicsForItem.objects.update(relist_profit=0)
+print("Updating item prices on auction house")
+get_commerce_listings(context) #13 min
 # get_commerce_listings(context, 23600)
-get_commerce_listings(context) #25 min
 try:
-    if context['get_commerce_listings_failed_at_begin']:
+    if context['get_commerce_listings_failed_at']:
         print(context)
 except KeyError:
     print(timezone.now())
-    calculate_recipe_cost(context) #12 min
-# calculate_recipe_cost(context) #12 min
+    print("Calculating profits")
+    calculate_recipe_cost(context) #7 min
 print(timezone.now())
 print(context)
 #run the following once for a new database:
-set_vendor_items()
+#set_vendor_items()
+print("Finished")
