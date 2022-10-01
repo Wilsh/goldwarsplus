@@ -91,7 +91,7 @@ class Item(models.Model):
         for recipe in self.recipe_set.all():
             ingredient_sublist = []
             recipe_id_list.append(recipe.recipe_id)
-            recipe_name_list.append([recipe.output_item_id, recipe.output_item_id.name])
+            recipe_name_list.append([recipe.output_item_id.item_id, recipe.output_item_id.name])
             for ingredient in recipe.recipeingredient_set.all():
                 should_buy = ingredient.item_id.buy_or_craft(ceil(ingredient.count / recipe.output_item_count))
                 if should_buy[0] == 'buy':
@@ -217,12 +217,18 @@ class EconomicsForRecipe(models.Model):
     '''Economic data applying to a Recipe'''
     for_recipe = models.OneToOneField('Recipe', on_delete=models.CASCADE)
     limited_production = models.BooleanField(default=False)
+    #num_limited_production_items = models.PositiveSmallIntegerField(default=0)
     ingredient_cost = models.PositiveIntegerField(default=0)
     fast_crafting_profit = models.IntegerField(default=0)
     delayed_crafting_profit = models.IntegerField(default=0)
+    #limited_production_profit_ratio = models.IntegerField(default=0)
     
     def __str__(self):
         return "Economic data for Recipe " + str(self.for_recipe.recipe_id) + ": " + self.for_recipe.output_item_id.name
+        
+    #def set_limited_production(self):
+    #    self.limited_production = True
+        
 
 class RecipeDiscipline(models.Model):
     '''Discipline flags applying to a Recipe'''
