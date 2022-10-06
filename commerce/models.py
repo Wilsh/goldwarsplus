@@ -217,18 +217,57 @@ class EconomicsForRecipe(models.Model):
     '''Economic data applying to a Recipe'''
     for_recipe = models.OneToOneField('Recipe', on_delete=models.CASCADE)
     limited_production = models.BooleanField(default=False)
-    #num_limited_production_items = models.PositiveSmallIntegerField(default=0)
+    num_limited_production_items = models.PositiveSmallIntegerField(default=0)
     ingredient_cost = models.PositiveIntegerField(default=0)
     fast_crafting_profit = models.IntegerField(default=0)
     delayed_crafting_profit = models.IntegerField(default=0)
-    #limited_production_profit_ratio = models.IntegerField(default=0)
+    limited_production_profit_ratio = models.IntegerField(default=0)
     
     def __str__(self):
         return "Economic data for Recipe " + str(self.for_recipe.recipe_id) + ": " + self.for_recipe.output_item_id.name
         
-    #def set_limited_production(self):
-    #    self.limited_production = True
+    def set_limited_production(self):
+        '''Search for time-gated Items used in the production of the Recipe 
+        linked to this EconomicsForRecipe. If any time-gated items are found,
+        set self.limited_production = True. Called recursively for Items that
+        can be crafted'''
+        for ingredient in self.for_recipe.recipeingredient_set.all(): #RecipeIngredient
+            item = ingredient.item_id #Item
+            if item.can_be_crafted:
+                for recipe in item.recipe_set.all(): #Recipe
+                    if recipe.economicsforrecipe.limited_production or recipe.economicsforrecipe.set_limited_production():
+                        self.limited_production = True
+                        self.save()
+                        return True
+        return False
         
+    def count_limited_production_items(self):
+        '''Return the number of time-gated items used in the production of the Recipe 
+        linked to this EconomicsForRecipe'''
+        limited_items = ['Clay Pot', 'Grow Lamp', 'Plate of Meaty Plant Food', 'Plate of Piquant Plant Food',
+                'Vial of Maize Balm', 'Glob of Elder Spirit Residue', 'Lump of Mithrillium', 
+                'Spool of Silk Weaving Thread', 'Spool of Thick Elonian Cord', 'Heat Stone',
+                'Dragon Hatchling Doll Adornments', 'Dragon Hatchling Doll Eye', 'Dragon Hatchling Doll Frame',
+                'Dragon Hatchling Doll Hide', 'Gossamer Stuffing'
+                ]
+        if self.for_recipe.output_item_id.name in limited_items:
+            return 1
+        total = 0
+        for ingredient in self.for_recipe.recipeingredient_set.all(): #RecipeIngredient
+            item = ingredient.item_id #Item
+            if item.can_be_crafted:
+                if item.name in limited_items:
+                    return ingredient.count
+                #recipe_count = 0
+                #old_recipe = None
+                for recipe in item.recipe_set.all(): #Recipe
+                    total += recipe.economicsforrecipe.count_limited_production_items() * ingredient.count
+                    #recipe_count += 1
+                    #if recipe_count > 1 and recipe.economicsforrecipe.limited_production:
+                        #print("Potential issue with multiple recipes to create a single item: " + str(recipe.recipe_id) + " " + str(recipe.output_item_id.item_id) + " " + recipe.output_item_id.name)
+                        #print("Previous: " + str(old_recipe.recipe_id) + " " + str(old_recipe.output_item_id.item_id) + " " + old_recipe.output_item_id.name)
+                    #old_recipe = recipe
+        return total
 
 class RecipeDiscipline(models.Model):
     '''Discipline flags applying to a Recipe'''
