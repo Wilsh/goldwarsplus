@@ -1,0 +1,60 @@
+{% extends "commerce/base.html" %}
+{% load static %}
+{% load commerce_extras %}
+
+{% block title %}
+    Limited Production
+{% endblock %}
+
+{% block content %}
+    <table class="table table-hover table-condensed text-right">
+        <tr>
+            <th class="text-left"></th>
+            <th class="text-left">Name</th>
+            <th class="text-right">Profit Per Limited Item</th>
+            <th class="text-right">Sell For</th>
+            <th class="text-right">Disciplines</th>
+            <th class="text-right">Type</th>
+            <th class="text-right">Minimum Rating</th>
+        </tr>
+    {% for recipe in recipe_list %}
+        <tr class="{{ recipe.for_recipe.output_item_id.rarity|lower }}">
+            <td class="text-left"><img src="{% static commerce %}commerce/items/{{ recipe.for_recipe.output_item_id.icon.static_id }}" height="30" width="30" alt="item icon" />
+            <td class="text-left"><a href="{% url 'commerce:item_detail' recipe.for_recipe.output_item_id.item_id %}"><strong>{{ recipe.for_recipe.output_item_id.name }}</strong></a></td>
+            <td class="text-right">{% show_coins recipe.limited_production_profit_ratio %}</td>
+            <td class="text-right">{% show_coins recipe.for_recipe.output_item_id.get_market_delay_sell %}</td>
+            <td class="text-right">
+                {% for discipline, exists in recipe.for_recipe.recipediscipline.get_disciplines %}
+                    {% if exists %}
+                        <img src="{% static commerce %}commerce/{{ discipline|lower }}.png" height="26" alt="{{ discipline|lower }} icon" />
+                    {% endif %}
+                {% endfor %}
+                </td>
+            <td class="text-right">{{ recipe.for_recipe.type }}</td>
+            <td class="text-right">{{ recipe.for_recipe.min_rating }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+
+    {% if is_paginated %}
+    <nav aria-label="Page navigation" class="text-center">
+        <ul class="pagination pagination-lg">
+            {% if page_obj.has_previous %}
+                <li>
+                  <a href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                  </a>
+                </li>
+            {% endif %}
+            <li><span aria-hidden="true">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+            {% if page_obj.has_next %}
+            <li>
+                <a href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+{% endblock %}

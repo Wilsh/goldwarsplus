@@ -167,14 +167,13 @@ def calculate_recipe_cost(context):
     of the ingredients needed to craft the Item if that cost is lower than just buying the Item. 
     Save that cost in the EconomicsForRecipe for the Item. Calculate the profit from crafting 
     the Item and save if > 0'''
-    EconomicsForRecipe.objects.all().update(ingredient_cost=0, delayed_crafting_profit=0, fast_crafting_profit=0)
+    EconomicsForRecipe.objects.all().update(ingredient_cost=0, delayed_crafting_profit=0, fast_crafting_profit=0, limited_production_profit_ratio=0)
     num_updated = 0
     for item in Item.objects.filter(seen_on_trading_post=True, can_be_crafted=True):
         result = item.buy_or_craft()
         if result[0] == 'buy':
             continue
         elif result[0] == 'craft':
-            # economics = EconomicsForRecipe.objects.get(for_recipe=Recipe.objects.get(recipe_id=result[5]))
             economics = Recipe.objects.get(recipe_id=result[5]).economicsforrecipe
             economics.ingredient_cost = result[1] * result[2]
             profit = int((item.get_market_sell() * 0.85) - economics.ingredient_cost)
@@ -182,10 +181,12 @@ def calculate_recipe_cost(context):
                 economics.fast_crafting_profit = profit
                 num_updated += 1
             #items with sell listings much greater than buy listings are not likely to sell
-            if (item.get_market_sell() * 2.5) - item.get_market_delay_sell() > 0:
+            if (item.get_market_sell() * 3.5) - item.get_market_delay_sell() > 0:
                 profit = int((item.get_market_delay_sell() * 0.85) - economics.ingredient_cost)
                 if profit > 0:
                     economics.delayed_crafting_profit = profit
+                    if economics.num_limited_production_items > 0:
+                        economics.limited_production_profit_ratio = int(profit / economics.num_limited_production_items)
                     num_updated += 1
             economics.save()
     context['profitable_recipes_found'] = num_updated
@@ -223,17 +224,28 @@ def set_vendor_items():
         new_entry.save()
 
     list = ['Clay Pot', 'Grow Lamp', 'Plate of Meaty Plant Food', 'Plate of Piquant Plant Food',
-    'Vial of Maize Balm', 'Glob of Elder Spirit Residue', 'Lump of Mithrillium', 
-    'Spool of Silk Weaving Thread', 'Spool of Thick Elonian Cord', 'Heat Stone',
-    ]
+            'Vial of Maize Balm', 'Glob of Elder Spirit Residue', 'Lump of Mithrillium', 
+            'Spool of Silk Weaving Thread', 'Spool of Thick Elonian Cord', 'Heat Stone',
+            'Dragon Hatchling Doll Adornments', 'Dragon Hatchling Doll Eye', 'Dragon Hatchling Doll Frame',
+            'Dragon Hatchling Doll Hide', 'Gossamer Stuffing'
+            ]
     for itemname in list:
         a = Item.objects.get(name=itemname)
         for recipe in a.recipe_set.all():
             recipe.economicsforrecipe.limited_production = True
             recipe.economicsforrecipe.save()
+    print("Flagging limited production recipes")
+    for entry in EconomicsForRecipe.objects.all():
+        entry.set_limited_production()
+    print("Setting EconomicsForRecipe values for limited production recipes")
+    for entry in EconomicsForRecipe.objects.filter(limited_production=True):
+        entry.num_limited_production_items = entry.count_limited_production_items()
+        entry.save()
 
 print(timezone.now())
 context = {}
+#run the following once for a new database:
+#set_vendor_items()
 print("Checking for new items on the auction house")
 find_listed_items(context) #40 sec
 print(context)
@@ -250,6 +262,24 @@ except KeyError:
     calculate_recipe_cost(context) #7 min
 print(timezone.now())
 print(context)
-#run the following once for a new database:
-#set_vendor_items()
 print("Finished")
+'''
+for entry in EconomicsForRecipe.objects.all():
+    if entry.set_limited_production():
+        print("Found limited production recipe: " + entry.for_recipe.output_item_id.name)
+
+        
+#for entry in EconomicsForRecipe.objects.filter(limited_production=True):
+#for entry in EconomicsForRecipe.objects.get(for_recipe=Recipe.objects.get(recipe_id=10442)):
+    #a = entry.count_limited_production_items()
+#a = EconomicsForRecipe.objects.get(for_recipe=Recipe.objects.get(recipe_id=10442)).count_limited_production_items()
+#if a:
+    #print(a)
+    
+for entry in EconomicsForRecipe.objects.all():
+    count = entry.count_limited_production_items()
+    if count > 0:
+        entry.num_limited_production_items = count
+        entry.save()
+        print("Entry updated ("+str(count)+") recipe id: " + str(entry.for_recipe.recipe_id) + " " + entry.for_recipe.output_item_id.name)
+'''
