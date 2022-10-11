@@ -20,6 +20,7 @@ class Item(models.Model):
     vendor_value = models.PositiveIntegerField(default=0)
     seen_on_trading_post = models.BooleanField(default=False)
     can_be_crafted = models.BooleanField(default=False)
+    historically_profitable = models.BooleanField(default=False)
     can_purchase_from_vendor = models.BooleanField(default=False)
     vendor_price = models.PositiveIntegerField(default=0)
     date_added = models.DateTimeField()

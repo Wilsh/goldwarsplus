@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
-    <meta name="author" content="Andrew Seligman">
+    <meta name="ROBOTS" content="NOINDEX, FOLLOW">
     <!--<link rel="shortcut icon" href="favicon.ico">-->
 
     <title>{% block title %}{% endblock %} - Gold Wars Plus</title>
@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="{% static commerce %}commerce/theme.css">
   </head>
 
-  <body role="document">
+  <body role="document"> 
     <!-- Fixed navbar -->
     <div class="navbar navbar-default navbar-fixed-top" role="navigation">
       <div class="container">
@@ -32,10 +32,10 @@
         </div>
         <div class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
-            <li><a href="{% url 'commerce:index' %}">Home</a></li>
+            <li><a href="{% url 'commerce:home' %}">Home</a></li>
             <li><a href="{% url 'commerce:item_list' %}">Browse Items</a></li>
             <li><a href="{% url 'commerce:recipe_list' %}">Browse Recipes</a></li>
-            <li><a href="{% url 'commerce:relist_list' %}">Buy and Relist</a></li>
+            <li><a href="{% url 'commerce:limitedproduction_list' %}">Time-Gated Items</a></li>
             <li><a href="{% url 'commerce:craftingprofit_list' %}">Craft and Sell</a></li>
             <li><a href="{% url 'commerce:craftingprofitdelay_list' %}">Craft and List</a></li>
           </ul> 
