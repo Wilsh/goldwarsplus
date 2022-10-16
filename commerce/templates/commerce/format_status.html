@@ -1,0 +1,21 @@
+{% if status == 'error' %}
+    <span class="alert alert-danger" role="alert">
+        <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+        Internal Server Error
+    </span>
+{% elif status == 'updating' %}
+    <span class="alert alert-warning" role="alert">
+        <span class="glyphicon glyphicon-alert" aria-hidden="true"></span>
+        Full Update in Progress
+    </span>
+{% elif status == 'good' %}
+    <span class="alert alert-success" role="alert">
+        <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+        Database Up to Date
+    </span>
+{% else %}
+    <span class="alert alert-danger" role="alert">
+        <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+        Database Out of Date
+    </span>
+{% endif %}

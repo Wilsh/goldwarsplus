@@ -1,11 +1,11 @@
 #!/usr/bin/python3.6
-#run in command prompt first:
-#export DJANGO_SETTINGS_MODULE=website.settings
 
 #This script runs continuously to keep the database current.
 #Once daily, it checks the GW2 API for previously unseen items and recipes 
 #and adds any new items or recipes to the database.
-#
+#Once hourly, it refreshes all Trading Post data.
+#Approximately every five minutes, it refreshes the most relevant
+#Trading Post data.
 
 import os
 os.system("export DJANGO_SETTINGS_MODULE=website.settings")
@@ -20,7 +20,6 @@ import json
 import time
 import dateutil.parser #update to python 3.7 to use datetime.fromisoformat() instead of this
 from datetime import timedelta
-#import os.path
 from urllib.request import Request, urlopen, urlretrieve
 from urllib.error import URLError, HTTPError
 from django.urls import reverse
@@ -32,8 +31,9 @@ from commerce.models import Item, ItemFlag, EconomicsForItem, Icon, Recipe, Econ
 LOG_FILE = "/home/turbobear/gwplog/script_log.txt"
 
 script_info = {
+        "last_update": timezone.now() - timedelta(days=1),
         "last_item_update": timezone.now() - timedelta(days=1),
-        "last_full_tp_update": timezone.now() - timedelta(hours=2),
+        "last_full_tp_update": timezone.now() - timedelta(hours=1),
         "get_commerce_listings_failed_at": 0
     }
 
@@ -43,6 +43,7 @@ def setup_script_info():
     try:
         with open(LOG_FILE, "r") as f:
             info = json.load(f)
+            script_info["last_update"] = dateutil.parser.parse(info["last_update"])
             script_info["last_item_update"] = dateutil.parser.parse(info["last_item_update"])
             script_info["last_full_tp_update"] = dateutil.parser.parse(info["last_full_tp_update"])
     except (FileNotFoundError, KeyError):
@@ -54,9 +55,14 @@ def write_script_info():
         script_info_json = {}
         for k, v in script_info.items():
             script_info_json[k] = v
+        script_info_json["last_update"] = script_info_json["last_update"].isoformat()
         script_info_json["last_item_update"] = script_info_json["last_item_update"].isoformat()
         script_info_json["last_full_tp_update"] = script_info_json["last_full_tp_update"].isoformat()
         json.dump(script_info_json, f)
+
+def update_succeeded():
+    script_info["last_update"] = timezone.now()
+    write_script_info()
 
 def get_api_data(url_postfix, context):
     '''Return decoded json object from GW2 API'''
@@ -358,6 +364,7 @@ def calculate_recipe_cost(item_queryset):
         economics.limited_production_profit_ratio = int(economics.delayed_crafting_profit / economics.num_limited_production_items)
         economics.save()
     #context['profitable_recipes_found'] = num_updated
+    update_succeeded()
 
 def update_all_recipe_cost():
     '''Refresh EconomicsForRecipe data for all possible Items'''
@@ -399,7 +406,9 @@ def should_check_for_items():
     return timezone.now() - script_info["last_item_update"] > timedelta(days = 1)
     
 def should_full_tp_update():
-    return timezone.now() - script_info["last_full_tp_update"] > timedelta(hours = 1)
+    if script_info['get_commerce_listings_failed_at'] == 0:
+        return timezone.now() - script_info["last_full_tp_update"] > timedelta(hours = 1)
+    return True
 
 setup_script_info()
 requires_update = False
@@ -411,7 +420,7 @@ while True:
         update_all_tp_items(script_info['get_commerce_listings_failed_at'])
         requires_update = True
         print("Finished")
-    else:
+    elif script_info['get_commerce_listings_failed_at'] == 0:
         print("Updating limited item prices on auction house")
         update_limited_tp_items()
         print("Finished")
@@ -424,4 +433,5 @@ while True:
         print("Calculating limited profits")
         update_limited_recipe_cost()
         print("Finished")
+    print("Sleeping")
     time.sleep(60)

@@ -1,4 +1,5 @@
 {% load static %}
+{% load commerce_extras %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -38,7 +39,10 @@
             <li><a href="{% url 'commerce:limitedproduction_list' %}">Time-Gated Items</a></li>
             <li><a href="{% url 'commerce:craftingprofit_list' %}">Craft and Sell</a></li>
             <li><a href="{% url 'commerce:craftingprofitdelay_list' %}">Craft and List</a></li>
-          </ul> 
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li><a>{% get_database_status %}</a></li>
+          </ul>
         </div><!--/.nav-collapse -->
       </div>
     </div>

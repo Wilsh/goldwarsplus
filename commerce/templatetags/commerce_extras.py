@@ -1,8 +1,33 @@
+import json
+import time
+import dateutil.parser #update to python 3.7 to use datetime.fromisoformat() instead of this
+from datetime import timedelta
+
 from django import template
+from django.utils import timezone
 from django.utils.html import format_html
 from commerce.models import Item
 
 register = template.Library()
+
+@register.inclusion_tag('commerce/format_status.html')
+def get_database_status():
+    '''Display a status based on when the database was last updated'''
+    LOG_FILE = '/home/turbobear/gwplog/script_log.txt' #created by gwp_automated.py
+    try:
+        with open(LOG_FILE, 'r') as f:
+            info = json.load(f)
+            last_update = dateutil.parser.parse(info['last_update'])
+    except Exception:
+        return {'status': 'error'}
+    difference = timezone.now() - last_update
+    if difference < timedelta(minutes = 5):
+        status = 'good'
+    elif difference < timedelta(minutes = 30):
+        status = 'updating'
+    else:
+        status = 'bad'
+    return {'status': status}
 
 @register.inclusion_tag('commerce/format_coins.html')
 def show_coins(value):
