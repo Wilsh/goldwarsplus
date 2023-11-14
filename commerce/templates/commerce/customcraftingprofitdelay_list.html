@@ -1,0 +1,137 @@
+{% extends "commerce/base.html" %}
+{% load static %}
+{% load commerce_extras %}
+
+{% block title %}
+    Custom Craft and List
+{% endblock %}
+
+{% block content %}
+    {% if api_error %}
+        <h1>{{ api_error }}</h1>
+    {% endif %}
+    <table class="table table-hover table-condensed text-right">
+        <thead><tr>
+            <th class="text-left"></th>
+            <th class="text-left"></th>
+            <th class="text-left">Name</th>
+            <th class="text-right">Profit</th>
+            <th class="text-right">List For</th>
+            <th class="text-right">Disciplines</th>
+            <th class="text-right">Type</th>
+            <th class="text-right">Minimum Rating</th>
+        </tr></thead>
+        <tbody>
+    {% for recipe in recipe_list %}
+        <tr class="{{ recipe.for_recipe.output_item_id.rarity|lower }} {% for discipline, exists in recipe.for_recipe.recipediscipline.get_disciplines %}{% if exists %}{{ discipline|lower }}{% endif %}{% endfor %}"
+            id="{{ forloop.counter }}"
+            >
+            <td>
+                {% if api_error %}
+                    <span class="label label-default">&nbsp;&nbsp;</span></span>
+                {% else %}
+                    {% with recipe.for_recipe.output_item_id.item_id as item_id %}
+                    {% if item_id in listed %}
+                        {% if recipe.for_recipe.output_item_id.get_market_buy >= listed|get_item:item_id %}
+                            <span class="label label-success">&nbsp;&nbsp;</span></span>
+                        {% else %}
+                            <span class="label label-warning">&nbsp;&nbsp;</span></span>
+                        {% endif %}
+                    {% else %}
+                        <span class="label label-danger">&nbsp;&nbsp;</span></span>
+                    {% endif %}
+                    {% endwith %}
+                {% endif %}
+            </td>
+            <td class="text-left"><img src="{% static commerce %}commerce/items/{{ recipe.for_recipe.output_item_id.icon.static_id }}" height="30" width="30" alt="item icon" />
+            <td class="name text-left"><a href="{% url 'commerce:item_detail' recipe.for_recipe.output_item_id.item_id %}"><strong>{{ recipe.for_recipe.output_item_id.name }}</strong></a></td>
+            <td class="text-right">{% show_coins recipe.delayed_crafting_profit %}</td>
+            <td class="text-right">{% show_coins recipe.for_recipe.output_item_id.get_market_buy %}</td>
+            <td class="text-right">
+                {% for discipline, exists in recipe.for_recipe.recipediscipline.get_disciplines %}
+                    {% if exists %}
+                        <img src="{% static commerce %}commerce/{{ discipline|lower }}.png" height="26" alt="{{ discipline|lower }} icon" />
+                    {% endif %}
+                {% endfor %}
+            </td>
+            <td class="text-right">{{ recipe.for_recipe.type }}</td>
+            <td class="text-right">{{ recipe.for_recipe.min_rating }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+    {% if is_paginated %}
+    <nav aria-label="Page navigation" class="text-center">
+        <ul class="pagination pagination-lg">
+            {% if page_obj.has_previous %}
+                <li>
+                  <a href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                  </a>
+                </li>
+            {% endif %}
+            <li><span aria-hidden="true">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+            {% if page_obj.has_next %}
+            <li>
+                <a href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    <nav class="navbar navbar-default navbar-fixed-bottom">
+        <div class="container">
+            <button id="reset" type="button" class="btn btn-default btn-sm navbar-btn">Reset</button>&nbsp;&nbsp;
+            <button id="top" type="button" class="btn btn-default btn-sm navbar-btn">Top</button>&nbsp;&nbsp;
+            <button type="button" class="filter btn btn-default btn-xs navbar-btn" data-discipline="armorsmith"><img src="{% static commerce %}commerce/armorsmith.png" height="26" /></button>&nbsp;&nbsp;
+            <button type="button" class="filter btn btn-default btn-xs navbar-btn" data-discipline="weaponsmith"><img src="{% static commerce %}commerce/weaponsmith.png" height="26" /></button>&nbsp;&nbsp;
+            <button type="button" class="filter btn btn-default btn-xs navbar-btn" data-discipline="tailor"><img src="{% static commerce %}commerce/tailor.png" height="26" /></button>&nbsp;&nbsp;
+            <button type="button" class="filter btn btn-default btn-xs navbar-btn" data-discipline="huntsman"><img src="{% static commerce %}commerce/huntsman.png" height="26" /></button>&nbsp;&nbsp;
+            <button type="button" class="filter btn btn-default btn-xs navbar-btn" data-discipline="leatherworker"><img src="{% static commerce %}commerce/leatherworker.png" height="26" /></button>&nbsp;&nbsp;
+            <button type="button" class="filter btn btn-default btn-xs navbar-btn" data-discipline="artificer"><img src="{% static commerce %}commerce/artificer.png" height="26" /></button>
+        </div>
+    </nav>
+{% endblock %}
+{% block scripting %}
+    <script>
+        $(document).ready(function() {
+            $('#reset').click(function(event) {
+                var tb = $('tbody');
+                var rows = tb.find('tr');
+                //restore original ordering with sort by id
+                rows.sort(function(a, b) {
+                    var keyA = $(a).attr('id');
+                    var keyB = $(b).attr('id');
+                    return keyA - keyB;
+                });
+                $.each(rows, function(index, row) {
+                    tb.append(row);
+                });
+                $('tbody tr').show();
+                $('html, body').animate({scrollTop: 0}, 'fast');
+            });
+            $('#top').click(function(event) {
+                $('html, body').animate({scrollTop: 0}, 'fast');
+            });
+            $('.filter').click(function(event) {
+                //filter displayed rows by crafting discipline
+                var disc = $(this).attr('data-discipline'); //discipline obtained from clicked button
+                var tb = $('tbody');
+                var rows = tb.find('tr');
+                rows.show();
+                $('tbody tr').not('.'+disc).hide();
+                var filtered = $('tbody tr.'+disc);
+                filtered.sort(function(a, b) {
+                    return ($(b).find('.name').text()) < ($(a).find('.name').text()) ? 1 : -1; 
+                });
+                $.each(filtered, function(index, row) {
+                    tb.append(row);
+                });
+                $('html, body').animate({scrollTop: 0}, 'fast');
+            });
+            //console.log(16);
+        });
+    </script>
+{% endblock %}

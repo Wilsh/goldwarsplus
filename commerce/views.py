@@ -1,16 +1,13 @@
 from django.http import HttpResponse
-from django.shortcuts import render, get_object_or_404
-from django.urls import reverse
 from django.utils import timezone
 from django.views import generic
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
+import requests
 import json
-from django.contrib.auth.decorators import login_required
 from django.views.generic.base import TemplateView
 import random
 
-#from commerce.forms import UpdateForm
 from .models import Item, ItemFlag, EconomicsForItem, Icon, Recipe, EconomicsForRecipe, RecipeDiscipline, RecipeIngredient, BuyListing, SellListing
 
 # Create your views here.
@@ -29,11 +26,20 @@ class HomeView(TemplateView):
         context['count'] = [Item.objects.count(), Recipe.objects.count()]
         return context
 
+class PriceChangeView(generic.ListView):
+    model = EconomicsForItem
+    template_name = 'commerce/pricechange_list.html'
+    context_object_name = 'item_list'
+    paginate_by = 100
+    
+    def get_queryset(self):
+        return EconomicsForItem.objects.order_by('-price_change_count')
+
 class ItemListView(generic.ListView):
     model = Item
     template_name = 'commerce/item_list.html'
     context_object_name = 'item_list'
-    paginate_by = 20
+    paginate_by = 18
 
 class ItemDetailView(generic.DetailView):
     model = Item
@@ -44,7 +50,7 @@ class RecipeListView(generic.ListView):
     model = Recipe
     template_name = 'commerce/recipe_list.html'
     context_object_name = 'recipe_list'
-    paginate_by = 20
+    paginate_by = 18
 
 class RecipeDetailView(generic.DetailView):
     model = Recipe
@@ -55,20 +61,156 @@ class CraftingProfitListView(generic.ListView):
     model = EconomicsForRecipe
     template_name = 'commerce/craftingprofit_list.html'
     context_object_name = 'recipe_list'
-    paginate_by = 20
+    paginate_by = 18
     
     def get_queryset(self):
-        return EconomicsForRecipe.objects.exclude(fast_crafting_profit__lte=0).exclude(limited_production=True).order_by('-fast_crafting_profit')
+        #Sanity check required due to lag between updating Trading Post prices and calculation of profits.
+        #This avoids a situation where the "Profit" data is out of date but "Sell For" is accurate.
+        base_queryset = EconomicsForRecipe.objects.filter(fast_crafting_profit__range=(1,500000)).exclude(limited_production=True).order_by('-fast_crafting_profit')[:30]
+        for economics in base_queryset:
+            profit = int((economics.for_recipe.output_item_id.get_market_sell() * 0.85) - economics.ingredient_cost)
+            if profit != economics.fast_crafting_profit:
+                economics.fast_crafting_profit = profit
+                economics.save()
+        
+        return EconomicsForRecipe.objects.filter(fast_crafting_profit__range=(1,500000)).exclude(limited_production=True).order_by('-fast_crafting_profit')
 
 class CraftingProfitDelayListView(generic.ListView):
     model = EconomicsForRecipe
     template_name = 'commerce/craftingprofitdelay_list.html'
     context_object_name = 'recipe_list'
-    paginate_by = 20
+    paginate_by = 18
     
     def get_queryset(self):
-        return EconomicsForRecipe.objects.exclude(delayed_crafting_profit__lte=0).exclude(limited_production=True).order_by('-delayed_crafting_profit')
+        return EconomicsForRecipe.objects.filter(delayed_crafting_profit__range=(1,200000)).exclude(limited_production=True).order_by('-delayed_crafting_profit')
+        #return EconomicsForRecipe.objects.exclude(delayed_crafting_profit__lte=0).exclude(limited_production=True).order_by('-delayed_crafting_profit')
+
+class CustomCraftingProfitDelayListView(generic.ListView):
+    model = EconomicsForRecipe
+    template_name = 'commerce/customcraftingprofitdelay_list.html'
+    context_object_name = 'recipe_list'
+    paginate_by = 200
+    
+    def get_queryset(self):
+        a = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='viper').exclude(delayed_crafting_profit__lte=15000)
+        b = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='minstrel').exclude(delayed_crafting_profit__lte=15000)
+        c = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='trailblazer').exclude(delayed_crafting_profit__lte=15000)
+        d = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='sinister').exclude(delayed_crafting_profit__lte=12000)
+        e = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='marauder').exclude(delayed_crafting_profit__lte=12000)
+        f = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='relic').exclude(delayed_crafting_profit__lte=20000)
+        #valkyrie zealot soldier commander dragon's rampager assassin knight nomad sentinel giver carrion cleric bringer
+        return a.union(b, c, d, e, f).order_by('-delayed_crafting_profit')
+        #d = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='sinister')
+        #return d.order_by('-delayed_crafting_profit')
+    
+    def get_context_data(self, **kwargs):
+        context = super(CustomCraftingProfitDelayListView, self).get_context_data(**kwargs)
+        #get TP listed items using API key
+        API_KEY = 'BFB61861-2731-2643-A6CB-8AFD679021DF57D52DBC-E62F-4BEE-A25F-C0DF639C7FDD'
+        base_url = 'https://api.guildwars2.com'
+        url = base_url + '/v2/commerce/transactions/current/sells?page_size=200'
+        headers = {'Authorization': 'Bearer ' + API_KEY}
+        context['api_error'] = ''
+        sell_list = {}
+        while True:
+            try:
+                response = requests.get(url, headers=headers)
+                response.raise_for_status()
+            except requests.exceptions.HTTPError as e:
+                context['api_error'] = e
+            except requests.exceptions.ConnectionError as e:
+                context['api_error'] = e
+            except requests.exceptions.ConnectTimeout as e:
+                context['api_error'] = e
+            except requests.exceptions.RequestException as e:
+                context['api_error'] = 'generic connection error'
+            else:
+                try:
+                    listed = response.json()
+                except requests.exceptions.JSONDecodeError as e:
+                    context['api_error'] = 'json decode error'
+                except Exception as e:
+                    context['api_error'] = 'generic exception in JSON decode'
+                else:
+                    for item in listed:
+                        try:
+                            if sell_list[item['item_id']] > item['price']:
+                                sell_list[item['item_id']] = item['price']
+                            else:
+                                continue
+                        except KeyError:
+                            sell_list[item['item_id']] = item['price']
+                if response.links['self']['url'] == response.links['last']['url']:
+                    break
+                url = base_url + response.links['next']['url']
+            finally:
+                if context['api_error']:
+                    break
+        if sell_list:
+            context['listed'] = sell_list
+        return context
         
+class TestListView(generic.ListView):
+    model = EconomicsForRecipe
+    template_name = 'commerce/test_list.html'
+    context_object_name = 'recipe_list'
+    paginate_by = 200
+    
+    def get_queryset(self):
+        #a = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='viper').exclude(delayed_crafting_profit__lte=9000)
+        #b = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='minstrel').exclude(delayed_crafting_profit__lte=10000)
+        #c = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='trailblazer').exclude(delayed_crafting_profit__lte=10000)
+        d = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='sinister').exclude(delayed_crafting_profit__lte=10000)
+        #e = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='marauder').exclude(delayed_crafting_profit__lte=9000)
+        #valkyrie zealot soldier commander marauder dragon's rampager assassin knight nomad sentinel giver carrion cleric bringer
+        #return a.union(b, c, d, e).order_by('-delayed_crafting_profit')
+        #d = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='sinister')
+        return d.order_by('-delayed_crafting_profit')
+    
+    def get_context_data(self, **kwargs):
+        context = super(TestListView, self).get_context_data(**kwargs)
+        #get TP listed items using API key
+        API_KEY = 'BFB61861-2731-2643-A6CB-8AFD679021DF57D52DBC-E62F-4BEE-A25F-C0DF639C7FDD'
+        base_url = 'https://api.guildwars2.com'
+        url = base_url + '/v2/commerce/transactions/current/sells?page_size=200'
+        headers = {'Authorization': 'Bearer ' + API_KEY}
+        context['api_error'] = 'test'
+        '''sell_list = {}
+        while True:
+            try:
+                response = requests.get(url, headers=headers)
+                response.raise_for_status()
+            #except requests.HTTPError as e:
+                #context['api_error'] = e
+            #except requests.RequestException as e:
+                #context['api_error'] = e
+            except HTTPError as e:
+                context['api_error'] = e
+            except URLError as e:
+                context['api_error'] = e.reason
+            except Exception as e:
+                context['api_error'] = 'connection error: ' + e.reason
+            else:
+                try:
+                    listed = response.json()
+                except Exception as e:
+                    context['api_error'] = 'json decode error: ' + e.reason
+                else:
+                    for item in listed:
+                        try:
+                            if sell_list[item['item_id']] > item['price']:
+                                sell_list[item['item_id']] = item['price']
+                            else:
+                                continue
+                        except KeyError:
+                            sell_list[item['item_id']] = item['price']
+                if response.links['self']['url'] == response.links['last']['url']:
+                    break
+                url = base_url + response.links['next']['url']
+        if sell_list:
+            context['listed'] = sell_list'''
+        return context
+
 class LimitedProductionListView(generic.ListView):
     model = EconomicsForRecipe
     template_name = 'commerce/limitedproduction_list.html'

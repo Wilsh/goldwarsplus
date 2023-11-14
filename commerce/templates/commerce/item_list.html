@@ -27,25 +27,29 @@
                 {% if item.vendor_value %}
                     {% show_coins item.vendor_value %}
                 {% endif %}
-                </td>
+            </td>
         </tr>
     {% endfor %}
     </table>
     {% if is_paginated %}
-    <div class="row">
-        <div class="col-md-1 col-md-offset-1 text-right">
-        {% if page_obj.has_previous %}
-            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
-        {% endif %}
-        </div>
-        <div class="col-md-2 text-center">
-            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-        </div>
-        {% if page_obj.has_next %}
-        <div class="col-md-1 text-left">
-            <a href="?page={{ page_obj.next_page_number }}">next</a>
-        </div>
-        {% endif %}
-    </div>
+    <nav aria-label="Page navigation" class="text-center">
+        <ul class="pagination pagination-lg">
+            {% if page_obj.has_previous %}
+                <li>
+                  <a href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                  </a>
+                </li>
+            {% endif %}
+            <li><span aria-hidden="true">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+            {% if page_obj.has_next %}
+            <li>
+                <a href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
     {% endif %}
 {% endblock %}

@@ -23,7 +23,7 @@ class Item(models.Model):
     historically_profitable = models.BooleanField(default=False)
     can_purchase_from_vendor = models.BooleanField(default=False)
     vendor_price = models.PositiveIntegerField(default=0)
-    date_added = models.DateTimeField()
+    date_added = models.DateTimeField(auto_now_add=True)
     
     class Meta:
         ordering = ["-date_added"]
@@ -45,7 +45,6 @@ class Item(models.Model):
         self.rarity = itemdetails['rarity']
         self.level = itemdetails['level']
         self.vendor_value = itemdetails['vendor_value']
-        self.date_added = timezone.now()
     
     def get_market_buy(self, quantity=1):
         '''Return the cost of the quantity of this item if bought on the trading post'''
@@ -192,18 +191,18 @@ class Recipe(models.Model):
     players in the game'''
     recipe_id = models.PositiveIntegerField(primary_key=True)
     type = models.CharField(max_length=30, default='')
-    output_item_id = models.ForeignKey('Item', on_delete=models.CASCADE)
+    output_item_id = models.ForeignKey('Item', on_delete=models.CASCADE) #TODO change field name to output_item
     output_item_count = models.PositiveSmallIntegerField(default=0)
     min_rating = models.PositiveSmallIntegerField(default=0)
     AutoLearned = models.BooleanField(default=False)
     LearnedFromItem = models.BooleanField(default=False)
-    date_added = models.DateTimeField()
+    date_added = models.DateTimeField(auto_now_add=True)
     
     class Meta:
         ordering = ["-date_added"]
     
     def __str__(self):
-        return "Recipe for item " + str(self.output_item_id.item_id) + ": " + self.output_item_id.name
+        return "Recipe " + str(self.recipe_id) + " for item " + str(self.output_item_id.item_id) + ": " + self.output_item_id.name
     
     def add_details(self, recipedetails):
         self.recipe_id = recipedetails['id']
@@ -212,7 +211,6 @@ class Recipe(models.Model):
         self.min_rating = recipedetails['min_rating']
         for entry in recipedetails['flags']:
             setattr(self, entry, True)
-        self.date_added = timezone.now()
 
 class EconomicsForRecipe(models.Model):
     '''Economic data applying to a Recipe'''
@@ -356,4 +354,3 @@ class SellListing(models.Model):
         self.quantity = listing['quantity']
         self.unit_price = listing['unit_price']
         self.date_added = timezone.now()
-

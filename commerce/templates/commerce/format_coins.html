@@ -2,12 +2,12 @@
 
 {% with coins=context %}
 {% if coins.0 > 0 %}
-    {{ coins.0 }} <img src="{% static commerce %}commerce/goldcoin.png" alt="gold" />
+    {{ coins.0 }} <img src="{% static 'commerce/goldcoin.png' %}" alt="gold" />
 {% endif %}
 {% if coins.0 > 0 or coins.1 > 0 %}
-    {% if coins.1 < 10 and coins.0 > 0 %}0{% endif %}{{ coins.1 }} <img src="{% static commerce %}commerce/silvercoin.png" alt="silver" />
+    {% if coins.1 < 10 and coins.0 > 0 %}0{% endif %}{{ coins.1 }} <img src="{% static 'commerce/silvercoin.png' %}" alt="silver" />
 {% endif %}
 {% if coins.0 > 0 or coins.1 > 0 or coins.2 > 0 %}
-    {% if coins.2 < 10 and coins.0 > 0 or  coins.2 < 10 and coins.1 > 0 %}0{% endif %}{{ coins.2 }} <img src="{% static commerce %}commerce/coppercoin.png" alt="copper" />
+    {% if coins.2 < 10 and coins.0 > 0 or coins.2 < 10 and coins.1 > 0 %}0{% endif %}{{ coins.2 }} <img src="{% static 'commerce/coppercoin.png' %}" alt="copper" />
 {% endif %}
 {% endwith %}

@@ -21,9 +21,9 @@ def get_database_status():
     except Exception:
         return {'status': 'error'}
     difference = timezone.now() - last_update
-    if difference < timedelta(minutes = 5):
+    if difference < timedelta(minutes = 7):
         status = 'good'
-    elif difference < timedelta(minutes = 30):
+    elif difference < timedelta(minutes = 25):
         status = 'updating'
     else:
         status = 'bad'

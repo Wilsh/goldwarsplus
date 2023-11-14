@@ -19,7 +19,7 @@
         <tr class="{{ recipe.output_item_id.rarity|lower }}">
             <td class="text-left">{{ recipe.recipe_id }}</td>
             <td class="text-left"><img src="{% static commerce %}commerce/items/{{ recipe.output_item_id.icon.static_id }}" height="30" width="30" alt="item icon" />
-            <td class="text-left"><a href="{% url 'commerce:item_detail' recipe.output_item_id.item_id %}"><strong>{{ recipe.output_item_id.name }}</strong></a></td>
+            <td class="text-left"><a href="{% url 'commerce:recipe_detail' recipe.recipe_id %}"><strong>{{ recipe.output_item_id.name }}</strong></a></td>
             <td class="text-left">{{ recipe.type }}</td>
             <td class="text-left">
                 {% for discipline, exists in recipe.recipediscipline.get_disciplines %}
@@ -33,20 +33,24 @@
     {% endfor %}
     </table>
     {% if is_paginated %}
-    <div class="row">
-        <div class="col-md-1 col-md-offset-1 text-right">
-        {% if page_obj.has_previous %}
-            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
-        {% endif %}
-        </div>
-        <div class="col-md-2 text-center">
-            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-        </div>
-        {% if page_obj.has_next %}
-        <div class="col-md-1 text-left">
-            <a href="?page={{ page_obj.next_page_number }}">next</a>
-        </div>
-        {% endif %}
-    </div>
+    <nav aria-label="Page navigation" class="text-center">
+        <ul class="pagination pagination-lg">
+            {% if page_obj.has_previous %}
+                <li>
+                  <a href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                  </a>
+                </li>
+            {% endif %}
+            <li><span aria-hidden="true">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+            {% if page_obj.has_next %}
+            <li>
+                <a href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
     {% endif %}
 {% endblock %}

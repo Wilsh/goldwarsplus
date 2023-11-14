@@ -6,6 +6,8 @@
 .table .ascended {background-color: #ffe3ef;}
 .table .legendary {background-color: #e8dbfb;} */
 
+body {background: url('crossword.png') repeat 0 0;}
+
 .table  {background-color: #fdfdfd;}
 
 .table>tbody>tr>td {vertical-align: middle;}
@@ -43,11 +45,11 @@
 .table  .legendary a:link{color: #4c139d;}
 .table  .legendary a:visited{color: #4c139d;}
 
-h1.junk {color: #868686;}
-h1.basic {color: #000000;}
-h1.fine {color: #62a4da;}
-h1.masterwork {color: #1a9306;}
-h1.rare {color: #fcd00b;}
-h1.exotic {color: #ffa405;}
-h1.ascended {color: #fb3e8d;}
-h1.legendary {color: #4c139d;}
+h1.junk, h2.junk, h3.junk {color: #868686;}
+h1.basic, h2.basic, h3.basic {color: #000000;}
+h1.fine, h2.fine, h3.fine {color: #62a4da;}
+h1.masterwork, h2.masterwork, h3.masterwork {color: #1a9306;}
+h1.rare, h2.rare, h3.rare {color: #fcd00b;}
+h1.exotic, h2.exotic, h3.exotic {color: #ffa405;}
+h1.ascended, h2.ascended, h3.ascended {color: #fb3e8d;}
+h1.legendary, h2.legendary, h3.legendary {color: #4c139d;}

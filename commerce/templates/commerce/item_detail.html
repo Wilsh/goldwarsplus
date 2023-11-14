@@ -35,7 +35,7 @@
     {% for recipe in item_info.recipe_set.all %}
         {% if forloop.first %}<h3>Recipe{% if item_info.recipe_set.all|length > 1 %}s{% endif %} for {{ item_info.name }}</h3>{% endif %}
         <dl class="dl-horizontal">
-            <dt>Recipe ID:</dt><dd>{{ recipe.recipe_id }}</dd>
+            <dt>Recipe ID:</dt><dd><a href="{% url 'commerce:recipe_detail' recipe.recipe_id %}">{{ recipe.recipe_id }}</a></dd>
             <dt>Type:</dt><dd>{{ recipe.type }}</dd>
             <dt>Number Created</dt><dd>{{ recipe.output_item_count }}</dd>
             <dt>Disciplines:</dt><dd>
@@ -46,6 +46,7 @@
                 {% endfor %}
                 </dd>
             <dt>Minimum Rating</dt><dd>{{ recipe.min_rating }}</dd>
+            <dt>Is Time Limited</dt><dd>{% if recipe.economicsforrecipe.limited_production %}Yes{% else %}No{% endif %}</dd>
             <dt>Learned:</dt><dd>
                 {% if recipe.AutoLearned %}Automatically
                 {% elif recipe.LearnedFromItem %}From Item
@@ -64,7 +65,7 @@
                     </tr>
                     {% for ingredient in recipe.recipeingredient_set.all %}
                     <tr class="{{ ingredient.item_id.rarity|lower }}">
-                        <td class="text-left"><img src="{% static commerce %}commerce/items/{{ ingredient.item_id.icon.static_id }}" height="25" width="25" alt="item icon" /></td>
+                        <td class="text-right"><img src="{% static commerce %}commerce/items/{{ ingredient.item_id.icon.static_id }}" height="25" width="25" alt="item icon" /></td>
                         <td class="text-left"><a href="{% url 'commerce:item_detail' ingredient.item_id.item_id %}"><strong>{{ ingredient.item_id.name }}</strong></a></td>
                         <td class="text-left">{{ ingredient.count }}</td>
                         <td>

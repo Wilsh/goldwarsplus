@@ -13,4 +13,7 @@ urlpatterns = [
     url(r'^crafting/max/$', views.CraftingProfitDelayListView.as_view(), name='craftingprofitdelay_list'),
     url(r'^crafting/limited/$', views.LimitedProductionListView.as_view(), name='limitedproduction_list'),
     url(r'^relist/$', views.RelistListView.as_view(), name='relist_list'),
+    url(r'^pricechange/$', views.PriceChangeView.as_view(), name='pricechange_list'),
+    url(r'^crafting/custom/$', views.CustomCraftingProfitDelayListView.as_view(), name='customcraftingprofitdelay_list'),
+    url(r'^crafting/test/$', views.TestListView.as_view(), name='test_list'),
 ]

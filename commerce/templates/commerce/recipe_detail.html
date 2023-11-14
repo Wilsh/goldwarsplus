@@ -3,7 +3,7 @@
 {% load commerce_extras %}
 
 {% block title %}
-    Item Detail
+    Recipe Detail - {{ recipe_info.output_item_id.name }}
 {% endblock %}
 
 {% block content %}
@@ -21,6 +21,7 @@
             {% endfor %}
             </dd>
         <dt>Minimum Rating</dt><dd>{{ recipe_info.min_rating }}</dd>
+        <dt>Is Time Limited</dt><dd>{% if recipe_info.economicsforrecipe.limited_production %}Yes{% else %}No{% endif %}</dd>
         <dt>Learned:</dt><dd>{% if recipe_info.AutoLearned %}automatically{% endif %}
             {% if recipe_info.LearnedFromItem %}from item{% endif %}</dd>
         <dt>Added:</dt><dd>{{ recipe_info.date_added }}</dd>

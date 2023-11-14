@@ -3,8 +3,8 @@
 #This script runs continuously to keep the database current.
 #Once daily, it checks the GW2 API for previously unseen items and recipes 
 #and adds any new items or recipes to the database.
-#Once hourly, it refreshes all Trading Post data.
-#Approximately every five minutes, it refreshes the most relevant
+#Once every two hours, it refreshes all Trading Post data.
+#Approximately every seven minutes, it refreshes the most relevant
 #Trading Post data.
 
 import os
@@ -29,11 +29,12 @@ from django.utils import timezone
 from commerce.models import Item, ItemFlag, EconomicsForItem, Icon, Recipe, EconomicsForRecipe, RecipeDiscipline, RecipeIngredient, BuyListing, SellListing
 
 LOG_FILE = "/home/turbobear/gwplog/script_log.txt"
+DJANGO_BASE = "/home/turbobear/website/website/" #location of manage.py
 
 script_info = {
         "last_update": timezone.now() - timedelta(days=1),
         "last_item_update": timezone.now() - timedelta(days=1),
-        "last_full_tp_update": timezone.now() - timedelta(hours=1),
+        "last_full_tp_update": timezone.now() - timedelta(hours=2),
         "get_commerce_listings_failed_at": 0
     }
 
@@ -65,21 +66,40 @@ def update_succeeded():
     write_script_info()
 
 def get_api_data(url_postfix, context):
-    '''Return decoded json object from GW2 API'''
+    '''Return decoded json object from GW2 API. Will retry API call if HTTPError occurs'''
     req = Request('https://api.guildwars2.com/v2/' + url_postfix)
-    try:
-        response = urlopen(req)
-    except HTTPError as e:
-        context['api_error'] = e
-    except URLError as e:
-        context['api_error'] = e.reason
-    else:
+    retries = 15
+    while True:
         try:
-            return json.loads(response.read().decode('utf-8'))
-        except Exception as e:
+            response = urlopen(req)
+        except HTTPError as e:
             print(e)
+            retries -= 1
+            if retries == 0:
+                print('Aborting API call: too many failed attempts')
+                context['api_error'] = e
+                break
+            print('API call failed. Retries remaining: ' + str(retries))
+            time.sleep(20)
+            continue
+        except URLError as e:
+            context['api_error'] = e.reason
+            print(e)
+            #print('URLError: ' + e.reason)
+        else:
+            try:
+                try:
+                    del context['api_error']
+                except KeyError:
+                    pass
+                if retries < 15:
+                    print('API retry successful')
+                return json.loads(response.read().decode('utf-8'))
+            except Exception as e:
+                context['api_error'] = e
+                print(e)
     return None
-    
+
 def get_api_objects(api_endpoint, context):
     '''Retrieve a list of ids from the specified API endpoint then 
     add any missing objects to their corresponding table'''
@@ -157,12 +177,13 @@ def get_api_objects(api_endpoint, context):
                             '92651', '93297', '93301', '93305', '93314', '93674', '93684', '94114', 
                             '94111', '94440', '94388', '94426', '94918', '94916', '94915', '94909', 
                             '95066', '95042', '95257', '95250', '95400', '95372', '95357', '98209', 
-                            '98202', '98177', '98182', '98206', '98196', '98200', '98612', '98697'
+                            '98202', '98177', '98182', '98206', '98196', '98200', '98612', '98697',
+                            '99048', '99081'
                             ]
                         if str(object['output_item_id']) in known_bad:
                             #ignore known error in api
                             continue
-                        context['api_error'] = 'Create Recipe ' + str(object['id']) + ' failed: related Item ' + str(object['output_item_id']) + ' does not exist'
+                        print('Create Recipe ' + str(object['id']) + ' failed: related Item ' + str(object['output_item_id']) + ' does not exist')
                         continue
                     #update can_be_crafted flag for Item
                     for_Item.can_be_crafted = True
@@ -187,8 +208,9 @@ def get_api_objects(api_endpoint, context):
                         recipe_ingredient.save()
                     #create EconomicsForRecipe entry
                     new_economics = EconomicsForRecipe(for_recipe=new_recipe)
+                    if new_economics.set_limited_production():
+                        new_economics.num_limited_production_items = new_economics.count_limited_production_items()
                     new_economics.save()
-                    new_economics.set_limited_production() #may need to move location
                 total_added += 1
             start += 200
             end += 200
@@ -351,7 +373,7 @@ def calculate_recipe_cost(item_queryset):
             market_delay_sell = item.get_market_delay_sell()
             fast_crafting_profit = int((market_sell * 0.85) - ingredient_cost)
             #items with sell listings much greater than buy listings are not likely to sell
-            if (market_sell * 2.5) - market_delay_sell > 0:
+            if (market_sell * 5) - market_delay_sell > 0:
                 delayed_crafting_profit = int((market_delay_sell * 0.85) - ingredient_cost)
             else:
                 delayed_crafting_profit = 0
@@ -361,8 +383,12 @@ def calculate_recipe_cost(item_queryset):
                 item.historically_profitable = True
                 item.save()
     for economics in EconomicsForRecipe.objects.filter(limited_production=True):
-        economics.limited_production_profit_ratio = int(economics.delayed_crafting_profit / economics.num_limited_production_items)
-        economics.save()
+        try: 
+            economics.limited_production_profit_ratio = int(economics.delayed_crafting_profit / economics.num_limited_production_items)
+            economics.save()
+        except ZeroDivisionError:
+            print("Division by zero error in Recipe: " + str(economics.for_recipe))
+            continue
     #context['profitable_recipes_found'] = num_updated
     update_succeeded()
 
@@ -372,6 +398,12 @@ def update_all_recipe_cost():
 
 def update_limited_recipe_cost():
     '''Refresh EconomicsForRecipe data for more important Items'''
+    #first check highest-profit craft and sell items to minimize out-of-date data
+    quick_check = EconomicsForRecipe.objects.filter(fast_crafting_profit__range=(1,500000)).exclude(limited_production=True).order_by('-fast_crafting_profit')[:20]
+    list = []
+    for item in quick_check:
+        list.append(item.for_recipe.output_item_id)
+    calculate_recipe_cost(list)
     calculate_recipe_cost(Item.objects.filter(historically_profitable=True))
 
 def get_new_items():
@@ -393,7 +425,7 @@ def get_new_items():
                 if item.recipe_set.exists():
                     item.can_be_crafted = True
                     item.save()
-            os.system("python manage.py collectstatic --no-input")
+            os.system("python " + DJANGO_BASE + "manage.py collectstatic --no-input")
         script_info["last_item_update"] = timezone.now()
         write_script_info()
     print(context)
@@ -407,12 +439,13 @@ def should_check_for_items():
     
 def should_full_tp_update():
     if script_info['get_commerce_listings_failed_at'] == 0:
-        return timezone.now() - script_info["last_full_tp_update"] > timedelta(hours = 1)
+        return timezone.now() - script_info["last_full_tp_update"] > timedelta(hours = 4)
     return True
 
 setup_script_info()
 requires_update = False
 while True:
+    a = timezone.now()
     if should_check_for_items():
         get_new_items()
     if should_full_tp_update():
@@ -424,6 +457,7 @@ while True:
         print("Updating limited item prices on auction house")
         update_limited_tp_items()
         print("Finished")
+        print(timezone.now()-a)
     if requires_update and script_info['get_commerce_listings_failed_at'] == 0:
         print("Calculating all profits")
         update_all_recipe_cost()
@@ -433,5 +467,6 @@ while True:
         print("Calculating limited profits")
         update_limited_recipe_cost()
         print("Finished")
+    print(timezone.now()-a)
     print("Sleeping")
     time.sleep(60)

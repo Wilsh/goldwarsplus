@@ -1,3 +1,5 @@
 db_backup
 db.sqlite3
 commerce/static/commerce/items/*
+commerce/migrations/*
+commerce/templatetags/_pycache_
