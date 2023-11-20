@@ -1,5 +1,11 @@
 db_backup
 db.sqlite3
+bin
+include
+lib
+lib64
+website
+pyvenv.cfg
 commerce/static/commerce/items/*
 commerce/migrations/*
 commerce/templatetags/_pycache_
