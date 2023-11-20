@@ -4,6 +4,9 @@ bin
 include
 lib
 lib64
+mainsite
+manage.py
+static
 website
 pyvenv.cfg
 commerce/static/commerce/items/*
