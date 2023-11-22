@@ -1,19 +1,19 @@
-from django.conf.urls import url
+from django.urls import path
 from . import views
 
 app_name = 'commerce'
 urlpatterns = [
-    #url(r'^$', views.index, name='index'),
-    url(r'^$', views.HomeView.as_view(), name='home'),
-    url(r'^items/$', views.ItemListView.as_view(), name='item_list'),
-    url(r'^items/detail/(?P<pk>[0-9]+)/$', views.ItemDetailView.as_view(), name='item_detail'),
-    url(r'^recipes/$', views.RecipeListView.as_view(), name='recipe_list'),
-    url(r'^recipes/detail/(?P<pk>[0-9]+)/$', views.RecipeDetailView.as_view(), name='recipe_detail'),
-    url(r'^crafting/$', views.CraftingProfitListView.as_view(), name='craftingprofit_list'),
-    url(r'^crafting/max/$', views.CraftingProfitDelayListView.as_view(), name='craftingprofitdelay_list'),
-    url(r'^crafting/limited/$', views.LimitedProductionListView.as_view(), name='limitedproduction_list'),
-    url(r'^relist/$', views.RelistListView.as_view(), name='relist_list'),
-    url(r'^pricechange/$', views.PriceChangeView.as_view(), name='pricechange_list'),
-    url(r'^crafting/custom/$', views.CustomCraftingProfitDelayListView.as_view(), name='customcraftingprofitdelay_list'),
-    url(r'^crafting/test/$', views.TestListView.as_view(), name='test_list'),
+    #path('', views.index, name='index'),
+    path('', views.HomeView.as_view(), name='home'),
+    path('items/', views.ItemListView.as_view(), name='item_list'),
+    path('items/detail/<int:pk>/', views.ItemDetailView.as_view(), name='item_detail'),
+    path('recipes/', views.RecipeListView.as_view(), name='recipe_list'),
+    path('recipes/detail/<int:pk>/', views.RecipeDetailView.as_view(), name='recipe_detail'),
+    path('crafting/', views.CraftingProfitListView.as_view(), name='craftingprofit_list'),
+    path('crafting/max/', views.CraftingProfitDelayListView.as_view(), name='craftingprofitdelay_list'),
+    path('crafting/limited/', views.LimitedProductionListView.as_view(), name='limitedproduction_list'),
+    path('relist/', views.RelistListView.as_view(), name='relist_list'),
+    path('pricechange/', views.PriceChangeView.as_view(), name='pricechange_list'),
+    path('crafting/custom/', views.CustomCraftingProfitDelayListView.as_view(), name='customcraftingprofitdelay_list'),
+    path('crafting/test/', views.TestListView.as_view(), name='test_list'),
 ]

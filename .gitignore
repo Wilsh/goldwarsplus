@@ -11,4 +11,4 @@ website
 pyvenv.cfg
 commerce/static/commerce/items/*
 commerce/migrations/*
-commerce/templatetags/_pycache_
+__pycache__

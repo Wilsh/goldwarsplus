@@ -1,7 +1,7 @@
 import json
 import time
-import dateutil.parser #update to python 3.7 to use datetime.fromisoformat() instead of this
-from datetime import timedelta
+#import dateutil.parser #update to python 3.7 to use datetime.fromisoformat() instead of this
+from datetime import datetime, timedelta
 
 from django import template
 from django.utils import timezone
@@ -17,7 +17,8 @@ def get_database_status():
     try:
         with open(LOG_FILE, 'r') as f:
             info = json.load(f)
-            last_update = dateutil.parser.parse(info['last_update'])
+            #last_update = dateutil.parser.parse(info['last_update'])
+            last_update = datetime.fromisoformat(info['last_update'])
     except Exception:
         return {'status': 'error'}
     difference = timezone.now() - last_update

@@ -18,8 +18,8 @@ django.setup()
 
 import json
 import time
-import dateutil.parser #update to python 3.7 to use datetime.fromisoformat() instead of this
-from datetime import timedelta
+#import dateutil.parser #update to python 3.7 to use datetime.fromisoformat() instead of this
+from datetime import datetime, timedelta
 from urllib.request import Request, urlopen, urlretrieve
 from urllib.error import URLError, HTTPError
 from django.urls import reverse
@@ -44,9 +44,9 @@ def setup_script_info():
     try:
         with open(LOG_FILE, "r") as f:
             info = json.load(f)
-            script_info["last_update"] = dateutil.parser.parse(info["last_update"])
-            script_info["last_item_update"] = dateutil.parser.parse(info["last_item_update"])
-            script_info["last_full_tp_update"] = dateutil.parser.parse(info["last_full_tp_update"])
+            script_info["last_update"] = datetime.fromisoformat(info["last_update"])
+            script_info["last_item_update"] = datetime.fromisoformat(info["last_item_update"])
+            script_info["last_full_tp_update"] = datetime.fromisoformat(info["last_full_tp_update"])
     except (FileNotFoundError, KeyError):
         write_script_info()
 
@@ -378,7 +378,7 @@ def calculate_recipe_cost(item_queryset):
             else:
                 delayed_crafting_profit = 0
             EconomicsForRecipe.objects.filter(for_recipe=Recipe.objects.get(recipe_id=result[5])).update(ingredient_cost=ingredient_cost, delayed_crafting_profit=delayed_crafting_profit, fast_crafting_profit=fast_crafting_profit)
-            if fast_crafting_profit > 0 or delayed_crafting_profit > 0:
+            if fast_crafting_profit > 1000 or delayed_crafting_profit > 1000:
                 num_updated += 1
                 item.historically_profitable = True
                 item.save()
