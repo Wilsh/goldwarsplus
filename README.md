@@ -11,6 +11,6 @@ Python 3.10
 PostgreSQL 14.9
 
 
-#Dependencies
+## Dependencies
 
 [Requests](https://docs.python-requests.org/en/latest/index.html)
