@@ -7,6 +7,7 @@
 {% endblock %}
 
 {% block content %}
+    <div style="margin-bottom: 100px">
     {% if api_error %}
         <h1>{{ api_error }}</h1>
     {% endif %}
@@ -93,6 +94,7 @@
             <button type="button" class="filter btn btn-default btn-xs navbar-btn" data-discipline="artificer"><img src="{% static commerce %}commerce/artificer.png" height="26" /></button>
         </div>
     </nav>
+    </div>
 {% endblock %}
 {% block scripting %}
     <script>
