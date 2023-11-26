@@ -155,7 +155,7 @@ def get_api_objects(api_endpoint, context):
                         print(f"Item found with no corresponding icon, ID: {object['id']}")
                         continue
                     except Exception as e:
-                        print(f"Unchecked exception line 89: {type(e).__name__}, Item ID: {object['id']}")
+                        print(f"Unchecked exception in get_api_objects: {type(e).__name__}, Item ID: {object['id']}")
                         item_icon = Icon(pk=object['icon'])
                         item_icon.add_details()
                         item_icon.save()
@@ -178,7 +178,7 @@ def get_api_objects(api_endpoint, context):
                             '94111', '94440', '94388', '94426', '94918', '94916', '94915', '94909', 
                             '95066', '95042', '95257', '95250', '95400', '95372', '95357', '98209', 
                             '98202', '98177', '98182', '98206', '98196', '98200', '98612', '98697',
-                            '99048', '99081'
+                            '99048', '99081', '99841', '99835', '99931', '101084',
                             ]
                         if str(object['output_item_id']) in known_bad:
                             #ignore known error in api
