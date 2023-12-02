@@ -24,6 +24,7 @@ class Item(models.Model):
     can_purchase_from_vendor = models.BooleanField(default=False)
     vendor_price = models.PositiveIntegerField(default=0)
     date_added = models.DateTimeField(auto_now_add=True)
+    crafting_meta_level = models.IntegerField(default=-1)
     
     class Meta:
         ordering = ["-date_added"]
@@ -45,6 +46,22 @@ class Item(models.Model):
         self.rarity = itemdetails['rarity']
         self.level = itemdetails['level']
         self.vendor_value = itemdetails['vendor_value']
+    
+    def get_meta_level(self, depth=0):
+        '''Calculate the maximum depth of recipe traversal necessary to craft this item'''
+        recipes = self.recipe_set.all()
+        if recipes.count() == 0:
+            return depth
+        max = 0
+        for recipe in recipes:
+            branch_max = 0
+            for ingredient in recipe.recipeingredient_set.all():
+                count = ingredient.item_id.get_meta_level(depth+1)
+                if count > branch_max:
+                    branch_max = count
+            if branch_max > max:
+                max = branch_max
+        return max
     
     def get_market_buy(self, quantity=1):
         '''Return the cost of the quantity of this item if bought on the trading post'''
@@ -79,7 +96,7 @@ class Item(models.Model):
         base components'''
         purchase_price = self.get_market_buy(quantity)
         if purchase_price == 0: #not available
-            purchase_price = 9999999999
+            purchase_price = 999999999
         if not self.can_be_crafted:
             return ['buy', purchase_price, quantity, [self.item_id, self.name]]
         recipe_id_list = []
@@ -120,7 +137,7 @@ class Item(models.Model):
         Intended for Items that can be crafted by more than one Recipe'''
         cheapest_idx = 0
         current_idx = 0
-        cheapest_price = 9999999999
+        cheapest_price = 999999999
         for ingredient_list in recipe_list:
             crafting_price = 0
             for ingredient, count in ingredient_list:
@@ -165,13 +182,88 @@ class ItemFlag(models.Model):
             setattr(self, entry, True)
 
 class EconomicsForItem(models.Model):
-    '''Economic data applying to an Item that can be found on the trading post'''
+    '''Economic data applying to an Item that can be found on the trading post 
+    or used as a RecipeIngredient'''
     for_item = models.OneToOneField('Item', on_delete=models.CASCADE)
     price_change_count = models.PositiveIntegerField(default=0)
     relist_profit = models.PositiveIntegerField(default=0)
+    cheaper_by_crafting = models.BooleanField(default=False)
+    cost_to_obtain = models.PositiveIntegerField(default=999999999)
     
     def __str__(self):
         return "Economic data for Item " + str(self.for_item.item_id) + ": " + self.for_item.name
+    
+    def set_cost_by_meta(self):
+        '''Calculate the cost to obtain the related Item based on and determine whether it 
+        should be crafted or bought. This info is not saved automatically.
+        This method differs from Item.buy_or_craft() in three important ways:
+            1) it runs iteratively instead of recursively
+            2) it requires up-to-date information for Items below this Item's meta level
+            3) because of the bottom-up approach, crafting costs are calculated according 
+                to the TP price of a single base Item; exact prices and availability of 
+                RecipeIngredients are not guaranteed
+        '''
+        cheapest = 999999999
+        recipe_id = 0
+        buy_or_craft = 'buy'
+        self.cheaper_by_crafting = False
+        market_buy = self.for_item.get_market_buy()
+        if self.for_item.crafting_meta_level == -1:
+            #fix unknown crafting_meta_level but assume the related Item cannot be bought 
+            #or crafted because condition 2) as above is not guaranteed
+            new_meta = self.for_item
+            new_meta.crafting_meta_level = new_meta.get_meta_level()
+            new_meta.save()
+            self.cost_to_obtain = cheapest
+        elif self.for_item.crafting_meta_level == 0:
+            #self.cost_to_obtain = market_buy if market_buy > 0 else cheapest
+            return ('buy', market_buy if market_buy > 0 else cheapest)
+        else:
+            crafting_cost, recipe_id = self.get_crafting_cost_by_meta()
+            if market_buy == 0:
+                #cannot buy; just figure out if Item can be crafted
+                self.cost_to_obtain = crafting_cost
+                if crafting_cost < cheapest:
+                    self.cheaper_by_crafting = True
+                    buy_or_craft = 'craft'
+            else:
+                if crafting_cost < market_buy:
+                    self.cheaper_by_crafting = True
+                    buy_or_craft = 'craft'
+                    self.cost_to_obtain = crafting_cost
+                else:
+                    self.cost_to_obtain = market_buy
+        return (buy_or_craft, self.cost_to_obtain, recipe_id)
+        
+    def get_crafting_cost_by_meta(self):
+        '''Return the lowest cost to craft this related Item. 
+        Returns 999999999 if it cannot be crafted'''
+        lowest = 999999999
+        recipe_id = 0
+        for recipe in self.for_item.recipe_set.all():
+            branch_min = 0
+            for ingredient in recipe.recipeingredient_set.all():
+                item = ingredient.item_id
+                if not item.seen_on_trading_post:
+                    try:
+                        item.economicsforitem
+                    except Item.economicsforitem.RelatedObjectDoesNotExist:
+                        new_economic_entry = EconomicsForItem(for_item=item)
+                        new_economic_entry.save()
+                #print(f"{item.item_id} {item.name} cost: {item.economicsforitem.cost_to_obtain} count: {ingredient.count}")
+                if item.crafting_meta_level == 0:
+                    cost = item.get_market_buy(ingredient.count)
+                    if cost == 0: #get_market_buy returns 0 if unavailable
+                        cost = 999999999
+                else:
+                    cost = item.economicsforitem.cost_to_obtain * ingredient.count
+                branch_min += cost
+            branch_min = int(branch_min / recipe.output_item_count)
+            if branch_min < lowest:
+                lowest = branch_min
+                recipe_id = recipe.recipe_id
+        #print(f"{self.for_item.item_id} {self.for_item.name} lowest: {lowest}")
+        return (lowest, recipe_id)
 
 class Icon(models.Model):
     '''Icons used for Items'''

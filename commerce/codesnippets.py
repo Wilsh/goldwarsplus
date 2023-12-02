@@ -1,3 +1,37 @@
+#find crafting_meta_level for an Item object
+def get_meta_level(item, depth=0):
+    recipes = item.recipe_set.all()
+    if recipes.count() == 0:
+        return depth
+    max = 0
+    for recipe in recipes:
+        branch_max = 0
+        for ingredient in recipe.recipeingredient_set.all():
+            count = get_meta_level(ingredient.item_id, depth+1)
+            if count > branch_max:
+                branch_max = count
+        if branch_max > max:
+            max = branch_max
+    return max
+
+#set crafting_meta_level for each Item object
+for item in Item.objects.filter(crafting_meta_level=-1):
+    level = get_meta_level(item)
+    print(item.name + ' ' + str(item.item_id) + ' ' + str(level))
+    item.crafting_meta_level = level
+    item.save()
+    
+#create missing EconomicsForItem entries
+updated = 0
+for item in Item.objects.filter(seen_on_trading_post=True):
+    try:
+        EconomicsForItem.objects.get(for_item=item)
+    except:
+        new_economic_entry = EconomicsForItem(for_item=item)
+        new_economic_entry.save()
+        updated += 1
+print(updated)
+
 #set limited production flag for EconomicsForRecipe objects
 limited_items = ['Clay Pot', 'Grow Lamp', 'Plate of Meaty Plant Food', 'Plate of Piquant Plant Food',
                 'Vial of Maize Balm', 'Glob of Elder Spirit Residue', 'Lump of Mithrillium', 

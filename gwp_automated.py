@@ -243,7 +243,7 @@ def find_listed_items(context):
             if not str(item) in known_bad:
                 print('Item ' + str(item) + ' does not exist')
             continue
-        if update.seen_on_trading_post == False:
+        if not update.seen_on_trading_post:
             update.seen_on_trading_post = True
             update.save()
             new_economic_entry = EconomicsForItem(for_item=update)
@@ -279,7 +279,7 @@ def update_buy_sell_listings(item, buy_or_sell, context):
                     new_entry.save()
                     return
                 elif buy_or_sell == 'sells':
-                    #detect price fluctuations to optimize listing update frequency
+                    #detect price fluctuations to optimize listing update frequency (not currently used)
                     if counter == 0 and abs(listing['unit_price'] - old_price) > (old_price * 0.02):
                         EconomicsForItem.objects.filter(for_item=entry).update(price_change_count=F('price_change_count') + 1)
                     #now add sell listing
@@ -356,16 +356,18 @@ def update_limited_tp_items():
     get_commerce_listings(Item.objects.filter(seen_on_trading_post=True, type="UpgradeComponent"))
     get_commerce_listings(Item.objects.filter(historically_profitable=True))
 
-def calculate_recipe_cost(item_queryset):
+def calculate_recipe_cost(item_queryset, skip_limited_production=False):
     '''For each Item in the given QuerySet, calculate the lowest cost of the ingredients 
     needed to craft the Item if that cost is lower than just buying the Item. Save that 
     cost in the EconomicsForRecipe for the Item. Calculate the profit from crafting the Item'''
     num_updated = 0
     for item in item_queryset:
-        result = item.buy_or_craft()
+        #result = item.buy_or_craft()
+        result = item.economicsforitem.set_cost_by_meta()
         if result[0] == 'buy':
             for recipe in Recipe.objects.filter(output_item_id=item):
-                EconomicsForRecipe.objects.filter(for_recipe=recipe).update(ingredient_cost=0, delayed_crafting_profit=0, fast_crafting_profit=0, limited_production_profit_ratio=0)
+                #EconomicsForRecipe.objects.filter(for_recipe=recipe).update(ingredient_cost=0, delayed_crafting_profit=0, fast_crafting_profit=0, limited_production_profit_ratio=0)
+                EconomicsForRecipe.objects.filter(for_recipe=recipe).update(ingredient_cost=result[1], delayed_crafting_profit=0, fast_crafting_profit=0, limited_production_profit_ratio=0)
             continue
         elif result[0] == 'craft':
             ingredient_cost = result[1]
@@ -377,34 +379,50 @@ def calculate_recipe_cost(item_queryset):
                 delayed_crafting_profit = int((market_delay_sell * 0.85) - ingredient_cost)
             else:
                 delayed_crafting_profit = 0
-            EconomicsForRecipe.objects.filter(for_recipe=Recipe.objects.get(recipe_id=result[5])).update(ingredient_cost=ingredient_cost, delayed_crafting_profit=delayed_crafting_profit, fast_crafting_profit=fast_crafting_profit)
+            #EconomicsForRecipe.objects.filter(for_recipe=Recipe.objects.get(recipe_id=result[5])).update(ingredient_cost=ingredient_cost, delayed_crafting_profit=delayed_crafting_profit, fast_crafting_profit=fast_crafting_profit)
+            EconomicsForRecipe.objects.filter(for_recipe=Recipe.objects.get(recipe_id=result[2])).update(ingredient_cost=ingredient_cost, delayed_crafting_profit=delayed_crafting_profit, fast_crafting_profit=fast_crafting_profit)
             if fast_crafting_profit > 1000 or delayed_crafting_profit > 1000:
                 num_updated += 1
                 item.historically_profitable = True
                 item.save()
-    for economics in EconomicsForRecipe.objects.filter(limited_production=True):
-        try: 
-            economics.limited_production_profit_ratio = int(economics.delayed_crafting_profit / economics.num_limited_production_items)
-            economics.save()
-        except ZeroDivisionError:
-            print("Division by zero error in Recipe: " + str(economics.for_recipe))
-            continue
+    '''if not skip_limited_production:
+        for economics in EconomicsForRecipe.objects.filter(limited_production=True):
+            try: 
+                economics.limited_production_profit_ratio = int(economics.delayed_crafting_profit / economics.num_limited_production_items)
+                economics.save()
+            except ZeroDivisionError:
+                print("Division by zero error in Recipe: " + str(economics.for_recipe))
+                continue'''
     #context['profitable_recipes_found'] = num_updated
     update_succeeded()
 
 def update_all_recipe_cost():
     '''Refresh EconomicsForRecipe data for all possible Items'''
-    calculate_recipe_cost(Item.objects.filter(seen_on_trading_post=True, can_be_crafted=True))
+    #calculate_recipe_cost(Item.objects.filter(seen_on_trading_post=True, can_be_crafted=True))
+    all_items = Item.objects.filter(seen_on_trading_post=True, can_be_crafted=True)
+    meta_level = 1
+    item_subset = all_items.filter(crafting_meta_level=meta_level)
+    while item_subset.count():
+        calculate_recipe_cost(item_subset)
+        meta_level += 1
+        item_subset = all_items.filter(crafting_meta_level=meta_level)
 
 def update_limited_recipe_cost():
     '''Refresh EconomicsForRecipe data for more important Items'''
     #first check highest-profit craft and sell items to minimize out-of-date data
-    quick_check = EconomicsForRecipe.objects.filter(fast_crafting_profit__range=(1,500000)).exclude(limited_production=True).order_by('-fast_crafting_profit')[:20]
-    list = []
-    for item in quick_check:
-        list.append(item.for_recipe.output_item_id)
-    calculate_recipe_cost(list)
-    calculate_recipe_cost(Item.objects.filter(historically_profitable=True))
+    #quick_check = EconomicsForRecipe.objects.filter(fast_crafting_profit__range=(1,500000)).exclude(limited_production=True).order_by('-fast_crafting_profit')[:20]
+    #list = []
+    #for item in quick_check:
+    #    list.append(item.for_recipe.output_item_id)
+    #calculate_recipe_cost(list, True)
+    #calculate_recipe_cost(Item.objects.filter(historically_profitable=True))
+    all_items = Item.objects.filter(historically_profitable=True)
+    meta_level = 1
+    item_subset = all_items.filter(crafting_meta_level=meta_level)
+    while item_subset.count():
+        calculate_recipe_cost(item_subset)
+        meta_level += 1
+        item_subset = all_items.filter(crafting_meta_level=meta_level)
 
 def get_new_items():
     '''Check the API for previously unseen Items and Recipes'''
@@ -421,10 +439,15 @@ def get_new_items():
     except KeyError:
         if context['total_items_added'] or context['total_recipes_added']:
             print("updating new items")
-            for item in Item.objects.all():
-                if item.recipe_set.exists():
+            #for item in Item.objects.all(): ##########why check every item?
+            #    if item.recipe_set.exists():
+            #        item.can_be_crafted = True
+            #        item.save()
+            for item in Item.objects.filter(crafting_meta_level=-1):
+                item.crafting_meta_level = item.get_meta_level()
+                if item.crafting_meta_level > 0:
                     item.can_be_crafted = True
-                    item.save()
+                item.save()
             os.system("python " + DJANGO_BASE + "manage.py collectstatic --no-input")
         script_info["last_item_update"] = timezone.now()
         write_script_info()
