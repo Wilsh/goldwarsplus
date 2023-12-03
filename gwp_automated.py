@@ -1,4 +1,4 @@
-#!/usr/bin/python3.6
+#!/usr/bin/python3.10
 
 #This script runs continuously to keep the database current.
 #Once daily, it checks the GW2 API for previously unseen items and recipes 
@@ -18,7 +18,6 @@ django.setup()
 
 import json
 import time
-#import dateutil.parser #update to python 3.7 to use datetime.fromisoformat() instead of this
 from datetime import datetime, timedelta
 from urllib.request import Request, urlopen, urlretrieve
 from urllib.error import URLError, HTTPError
@@ -472,12 +471,12 @@ while True:
     if should_check_for_items():
         get_new_items()
     if should_full_tp_update():
-        print("Updating all item prices on auction house")
+        print("Updating all item prices on trading post")
         update_all_tp_items(script_info['get_commerce_listings_failed_at'])
         requires_update = True
         print("Finished")
     elif script_info['get_commerce_listings_failed_at'] == 0:
-        print("Updating limited item prices on auction house")
+        print("Updating limited item prices on trading post")
         update_limited_tp_items()
         print("Finished")
         print(timezone.now()-a)
