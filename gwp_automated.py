@@ -3,8 +3,8 @@
 #This script runs continuously to keep the database current.
 #Once daily, it checks the GW2 API for previously unseen items and recipes 
 #and adds any new items or recipes to the database.
-#Once every two hours, it refreshes all Trading Post data.
-#Approximately every seven minutes, it refreshes the most relevant
+#Once every four hours, it refreshes all Trading Post data.
+#Approximately every five minutes, it refreshes the most relevant
 #Trading Post data.
 
 import os
@@ -22,8 +22,11 @@ from datetime import datetime, timedelta
 from urllib.request import Request, urlopen, urlretrieve
 from urllib.error import URLError, HTTPError
 from django.urls import reverse
-from django.db.models import F
+from django.db.models import F, Q
 from django.utils import timezone
+from django.core.exceptions import ObjectDoesNotExist
+from threading import Thread
+from queue import Queue
 
 from commerce.models import Item, ItemFlag, EconomicsForItem, Icon, Recipe, EconomicsForRecipe, RecipeDiscipline, RecipeIngredient, BuyListing, SellListing
 
@@ -33,9 +36,21 @@ DJANGO_BASE = "/home/turbobear/website/website/" #location of manage.py
 script_info = {
         "last_update": timezone.now() - timedelta(days=1),
         "last_item_update": timezone.now() - timedelta(days=1),
-        "last_full_tp_update": timezone.now() - timedelta(hours=2),
-        "get_commerce_listings_failed_at": 0
+        "last_full_tp_update": timezone.now() - timedelta(hours=4),
+        "get_commerce_listings_failed_at": 0,
+        "failed_at_meta_level": 0
     }
+
+#set up thread queue for data processing
+queryset_queue = Queue()
+def calculate_worker():
+    '''This worker operates in a separate thread to calculate Recipe costs
+    for Item querysets that have been added to the queryset_queue'''
+    while True:
+        queryset = queryset_queue.get()
+        calculate_recipe_cost(queryset)
+        queryset_queue.task_done()
+Thread(target=calculate_worker, daemon=True).start()
 
 def setup_script_info():
     '''Load data created from previous runs of this script or
@@ -258,6 +273,9 @@ def update_buy_sell_listings(item, buy_or_sell, context):
     except Item.DoesNotExist:
         print('Item ' + str(item['id']) + ' not found')
         return
+    except TypeError:
+        print('item ' + str(item) + ' passed in as non-Item object to update_buy_sell_listings()')
+        return
     #delete old listings
     if buy_or_sell == 'buys':
         entry.buylisting_set.all().delete()
@@ -308,7 +326,7 @@ def update_buy_sell_listings(item, buy_or_sell, context):
         entry.economicsforitem.relist_profit = profit
         entry.economicsforitem.save()'''
 
-def get_commerce_listings(item_queryset, begin=0):
+def get_commerce_listings(item_queryset, begin=0, meta_level=0):
     '''Update buy and sell orders for each Item in the given QuerySet'''
     context={}
     step = 200
@@ -330,6 +348,7 @@ def get_commerce_listings(item_queryset, begin=0):
             if not item_list:
                 #API error
                 script_info['get_commerce_listings_failed_at'] = begin
+                script_info['failed_at_meta_level'] = meta_level
                 write_script_info()
                 return -1
             for item in item_list:
@@ -340,20 +359,7 @@ def get_commerce_listings(item_queryset, begin=0):
             total_updated += num_found_items
         else:
             processing = False
-    context['total_commerce_listings_updated'] = total_updated
-
-def update_all_tp_items(begin):
-    '''Refresh buy and sell orders for every Item on the trading post'''
-    if get_commerce_listings(Item.objects.filter(seen_on_trading_post=True), begin) != -1:
-        script_info["last_full_tp_update"] = timezone.now()
-        script_info['get_commerce_listings_failed_at'] = 0
-        write_script_info()
-
-def update_limited_tp_items():
-    '''Refresh buy and sell orders for more important Items on the trading post'''
-    get_commerce_listings(Item.objects.filter(seen_on_trading_post=True, type="CraftingMaterial"))
-    get_commerce_listings(Item.objects.filter(seen_on_trading_post=True, type="UpgradeComponent"))
-    get_commerce_listings(Item.objects.filter(historically_profitable=True))
+    #context['total_commerce_listings_updated'] = total_updated
 
 def calculate_recipe_cost(item_queryset, skip_limited_production=False):
     '''For each Item in the given QuerySet, calculate the lowest cost of the ingredients 
@@ -361,11 +367,13 @@ def calculate_recipe_cost(item_queryset, skip_limited_production=False):
     cost in the EconomicsForRecipe for the Item. Calculate the profit from crafting the Item'''
     num_updated = 0
     for item in item_queryset:
-        #result = item.buy_or_craft()
-        result = item.economicsforitem.set_cost_by_meta()
+        try:
+            result = item.economicsforitem.set_cost_by_meta()
+        except ObjectDoesNotExist:
+            print(f"Invalid Item in queryset given to calculate_recipe_cost(): EconomicsForItem does not exist for item {item}")
+            continue
         if result[0] == 'buy':
             for recipe in Recipe.objects.filter(output_item_id=item):
-                #EconomicsForRecipe.objects.filter(for_recipe=recipe).update(ingredient_cost=0, delayed_crafting_profit=0, fast_crafting_profit=0, limited_production_profit_ratio=0)
                 EconomicsForRecipe.objects.filter(for_recipe=recipe).update(ingredient_cost=result[1], delayed_crafting_profit=0, fast_crafting_profit=0, limited_production_profit_ratio=0)
             continue
         elif result[0] == 'craft':
@@ -374,11 +382,10 @@ def calculate_recipe_cost(item_queryset, skip_limited_production=False):
             market_delay_sell = item.get_market_delay_sell()
             fast_crafting_profit = int((market_sell * 0.85) - ingredient_cost)
             #items with sell listings much greater than buy listings are not likely to sell
-            if (market_sell * 5) - market_delay_sell > 0:
+            if (market_sell * 10) - market_delay_sell > 0:
                 delayed_crafting_profit = int((market_delay_sell * 0.85) - ingredient_cost)
             else:
                 delayed_crafting_profit = 0
-            #EconomicsForRecipe.objects.filter(for_recipe=Recipe.objects.get(recipe_id=result[5])).update(ingredient_cost=ingredient_cost, delayed_crafting_profit=delayed_crafting_profit, fast_crafting_profit=fast_crafting_profit)
             EconomicsForRecipe.objects.filter(for_recipe=Recipe.objects.get(recipe_id=result[2])).update(ingredient_cost=ingredient_cost, delayed_crafting_profit=delayed_crafting_profit, fast_crafting_profit=fast_crafting_profit)
             if fast_crafting_profit > 1000 or delayed_crafting_profit > 1000:
                 num_updated += 1
@@ -393,43 +400,15 @@ def calculate_recipe_cost(item_queryset, skip_limited_production=False):
                 print("Division by zero error in Recipe: " + str(economics.for_recipe))
                 continue'''
     #context['profitable_recipes_found'] = num_updated
-    update_succeeded()
-
-def update_all_recipe_cost():
-    '''Refresh EconomicsForRecipe data for all possible Items'''
-    #calculate_recipe_cost(Item.objects.filter(seen_on_trading_post=True, can_be_crafted=True))
-    all_items = Item.objects.filter(seen_on_trading_post=True, can_be_crafted=True)
-    meta_level = 1
-    item_subset = all_items.filter(crafting_meta_level=meta_level)
-    while item_subset.count():
-        calculate_recipe_cost(item_subset)
-        meta_level += 1
-        item_subset = all_items.filter(crafting_meta_level=meta_level)
-
-def update_limited_recipe_cost():
-    '''Refresh EconomicsForRecipe data for more important Items'''
-    #first check highest-profit craft and sell items to minimize out-of-date data
-    #quick_check = EconomicsForRecipe.objects.filter(fast_crafting_profit__range=(1,500000)).exclude(limited_production=True).order_by('-fast_crafting_profit')[:20]
-    #list = []
-    #for item in quick_check:
-    #    list.append(item.for_recipe.output_item_id)
-    #calculate_recipe_cost(list, True)
-    #calculate_recipe_cost(Item.objects.filter(historically_profitable=True))
-    all_items = Item.objects.filter(historically_profitable=True)
-    meta_level = 1
-    item_subset = all_items.filter(crafting_meta_level=meta_level)
-    while item_subset.count():
-        calculate_recipe_cost(item_subset)
-        meta_level += 1
-        item_subset = all_items.filter(crafting_meta_level=meta_level)
+    #update_succeeded() **moved to end of queue execution**
 
 def get_new_items():
     '''Check the API for previously unseen Items and Recipes'''
     context = {'total_items_added':0, 'total_recipes_added':0}
-    print("checking for new items")
+    print("Checking for new items")
     get_api_objects('items', context) #36 min for empty database
     print(timezone.now())
-    print("checking for new recipes")
+    print("Checking for new recipes")
     get_api_objects('recipes', context) #5 min for empty database
     print(timezone.now())
     try:
@@ -437,7 +416,7 @@ def get_new_items():
             pass
     except KeyError:
         if context['total_items_added'] or context['total_recipes_added']:
-            print("updating new items")
+            print("Updating new items")
             #for item in Item.objects.all(): ##########why check every item?
             #    if item.recipe_set.exists():
             #        item.can_be_crafted = True
@@ -464,6 +443,58 @@ def should_full_tp_update():
         return timezone.now() - script_info["last_full_tp_update"] > timedelta(hours = 4)
     return True
 
+def update_and_calculate_all():
+    '''Refresh buy and sell orders for every Item on the trading post 
+    and calculate profits for every craftable Item that can be sold'''
+    begin = script_info['get_commerce_listings_failed_at']
+    meta_level = script_info['failed_at_meta_level']
+    all_items = Item.objects.filter(seen_on_trading_post=True)
+    calculate_items = Item.objects.filter(economicsforitem__isnull=False, can_be_crafted=True)
+    
+    if update_item_queryset(all_items, calculate_items, meta_level, begin) == -1:
+        return
+    script_info["last_full_tp_update"] = timezone.now()
+    script_info['get_commerce_listings_failed_at'] = 0
+    script_info['failed_at_meta_level'] = 0
+    write_script_info()
+
+def update_and_calculate_limited():
+    '''Refresh buy and sell orders for commonly-used crafting components on the trading post 
+    and calculate profits for known-profitable Items'''
+    limited_items = Item.objects.filter(Q(type="CraftingMaterial") | Q(type="UpgradeComponent") | Q(historically_profitable=True), seen_on_trading_post=True)
+    profitable_items_with_recipes = Item.objects.filter(historically_profitable=True)
+    update_item_queryset(limited_items, profitable_items_with_recipes)
+
+def update_item_queryset(item_queryset, calculate_queryset, meta_level=0, begin=0):
+    '''Update Item prices for the given item_queryset and calculate profits for crafting
+    the given calculate_queryset. Profit calculations are performed in a separate thread
+    to take advantage of CPU downtime while waiting for API calls on Items with higher
+    meta levels'''
+    while meta_level < 7:
+        item_subset = item_queryset.filter(crafting_meta_level=meta_level)
+        calculate_subset = calculate_queryset.filter(crafting_meta_level=meta_level)
+        if meta_level > 0:
+            #calculate recipe costs
+            queryset_queue.put(calculate_subset)
+        #pull API data
+        if get_commerce_listings(item_subset, begin, meta_level) == -1:
+            return -1
+        begin = 0
+        meta_level += 1
+    #there are few items with crafting_meta_level > 6, so combine the remaining meta_levels
+    item_subset = item_queryset.filter(crafting_meta_level__gte=7)
+    if get_commerce_listings(item_subset, begin, meta_level) == -1:
+        return -1
+    #API updates finished; still need to calculate recipe costs in order of meta_level
+    calculate_subset = calculate_queryset.filter(crafting_meta_level=meta_level)
+    while calculate_subset.count():
+        queryset_queue.put(calculate_subset)
+        meta_level += 1
+        calculate_subset = calculate_queryset.filter(crafting_meta_level=meta_level)
+    #wait for final recipe calculation
+    queryset_queue.join()
+    update_succeeded()
+
 setup_script_info()
 requires_update = False
 while True:
@@ -472,23 +503,13 @@ while True:
         get_new_items()
     if should_full_tp_update():
         print("Updating all item prices on trading post")
-        update_all_tp_items(script_info['get_commerce_listings_failed_at'])
+        update_and_calculate_all()
         requires_update = True
-        print("Finished")
-    elif script_info['get_commerce_listings_failed_at'] == 0:
+        print("Finished updating all item prices")
+    else:
         print("Updating limited item prices on trading post")
-        update_limited_tp_items()
-        print("Finished")
-        print(timezone.now()-a)
-    if requires_update and script_info['get_commerce_listings_failed_at'] == 0:
-        print("Calculating all profits")
-        update_all_recipe_cost()
-        requires_update = False
-        print("Finished")
-    elif script_info['get_commerce_listings_failed_at'] == 0:
-        print("Calculating limited profits")
-        update_limited_recipe_cost()
-        print("Finished")
+        update_and_calculate_limited()
+        print("Finished updating limited item prices")
     print(timezone.now()-a)
     print("Sleeping")
     time.sleep(60)
