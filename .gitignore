@@ -6,7 +6,7 @@ lib
 lib64
 mainsite
 manage.py
-static
+/static
 website
 pyvenv.cfg
 commerce/static/commerce/items/*
