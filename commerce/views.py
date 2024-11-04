@@ -89,19 +89,15 @@ class CustomCraftingProfitDelayListView(generic.ListView):
     model = EconomicsForRecipe
     template_name = 'commerce/customcraftingprofitdelay_list.html'
     context_object_name = 'recipe_list'
-    paginate_by = 200
     
     def get_queryset(self):
         a = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='viper').exclude(delayed_crafting_profit__lte=15000)
-        b = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='minstrel').exclude(delayed_crafting_profit__lte=15000)
-        c = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='trailblazer').exclude(delayed_crafting_profit__lte=15000)
-        d = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='sinister').exclude(delayed_crafting_profit__lte=12000)
-        e = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='marauder').exclude(delayed_crafting_profit__lte=12000)
+        b = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='minstrel').exclude(delayed_crafting_profit__lte=17000)
+        c = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='trailblazer').exclude(delayed_crafting_profit__lte=17000)
+        d = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='sinister').exclude(delayed_crafting_profit__lte=14000)
+        e = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='marauder').exclude(delayed_crafting_profit__lte=14000)
         f = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='relic').exclude(delayed_crafting_profit__lte=20000)
-        #valkyrie zealot soldier commander dragon's rampager assassin knight nomad sentinel giver carrion cleric bringer
         return a.union(b, c, d, e, f).order_by('-delayed_crafting_profit')
-        #d = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='sinister')
-        #return d.order_by('-delayed_crafting_profit')
     
     def get_context_data(self, **kwargs):
         context = super(CustomCraftingProfitDelayListView, self).get_context_data(**kwargs)
@@ -149,6 +145,31 @@ class CustomCraftingProfitDelayListView(generic.ListView):
         if sell_list:
             context['listed'] = sell_list
         return context
+
+class CustomCraftingProfitDelayListView2(CustomCraftingProfitDelayListView):
+    model = EconomicsForRecipe
+    template_name = 'commerce/customcraftingprofitdelay_list.html'
+    context_object_name = 'recipe_list'
+    #paginate_by = 200
+    
+    def get_queryset(self):
+        a = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='zealot').exclude(delayed_crafting_profit__lte=30000).exclude(delayed_crafting_profit__gte=60000)
+        b = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='soldier').exclude(delayed_crafting_profit__lte=30000).exclude(delayed_crafting_profit__gte=60000)
+        c = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='commander').exclude(delayed_crafting_profit__lte=30000).exclude(delayed_crafting_profit__gte=60000)
+        d = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='rampager').exclude(delayed_crafting_profit__lte=30000).exclude(delayed_crafting_profit__gte=60000).exclude(for_recipe__output_item_id__name__icontains='box of')
+        e = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='assassin').exclude(delayed_crafting_profit__lte=30000).exclude(delayed_crafting_profit__gte=60000).exclude(for_recipe__output_item_id__name__icontains='satchel of')
+        f = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='knight').exclude(delayed_crafting_profit__lte=30000).exclude(delayed_crafting_profit__gte=60000).exclude(for_recipe__output_item_id__name__icontains='box of').exclude(for_recipe__output_item_id__name__icontains='satchel of')
+        g = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='valkyrie').exclude(delayed_crafting_profit__lte=30000).exclude(delayed_crafting_profit__gte=60000)
+        h = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='cleric').exclude(delayed_crafting_profit__lte=30000).exclude(delayed_crafting_profit__gte=60000).exclude(for_recipe__output_item_id__name__icontains='box of')
+        i = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='nomad').exclude(delayed_crafting_profit__lte=30000).exclude(delayed_crafting_profit__gte=60000)
+        j = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='sentinel').exclude(delayed_crafting_profit__lte=30000).exclude(delayed_crafting_profit__gte=60000)
+        k = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='giver').exclude(delayed_crafting_profit__lte=30000).exclude(delayed_crafting_profit__gte=60000).exclude(for_recipe__output_item_id__name__icontains='box of')
+        l = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='carrion').exclude(delayed_crafting_profit__lte=30000).exclude(delayed_crafting_profit__gte=60000)
+        m = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='bringer').exclude(delayed_crafting_profit__lte=30000).exclude(delayed_crafting_profit__gte=60000)
+        n = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains="dragon's").exclude(delayed_crafting_profit__lte=30000).exclude(delayed_crafting_profit__gte=60000)
+        return a.union(b,c,d,e,f,g,h,i,j,k,l,m,n).order_by('-delayed_crafting_profit')
+        #d = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='sinister')
+        #return d.order_by('-delayed_crafting_profit')
         
 class TestListView(generic.ListView):
     model = EconomicsForRecipe

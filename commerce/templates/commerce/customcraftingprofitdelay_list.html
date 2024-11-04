@@ -24,7 +24,7 @@
         </tr></thead>
         <tbody>
     {% for recipe in recipe_list %}
-        <tr class="{{ recipe.for_recipe.output_item_id.rarity|lower }} {% for discipline, exists in recipe.for_recipe.recipediscipline.get_disciplines %}{% if exists %}{{ discipline|lower }}{% endif %}{% endfor %}"
+        <tr class="{{ recipe.for_recipe.output_item_id.rarity|lower }} {% for discipline, exists in recipe.for_recipe.recipediscipline.get_disciplines %}{% if exists %}{{ discipline|lower }}{% endif %} {% if recipe.for_recipe.output_item_id|is_relic %}relic{% endif %}{% endfor %}"
             id="{{ forloop.counter }}"
             >
             <td>
@@ -86,6 +86,7 @@
         <div class="container">
             <button id="reset" type="button" class="btn btn-default btn-sm navbar-btn">Reset</button>&nbsp;&nbsp;
             <button id="top" type="button" class="btn btn-default btn-sm navbar-btn">Top</button>&nbsp;&nbsp;
+            <button type="button" class="filter btn btn-default btn-xs navbar-btn" data-discipline="relic"><img src="{% static commerce %}commerce/relic.png" height="26" /></button>&nbsp;&nbsp;
             <button type="button" class="filter btn btn-default btn-xs navbar-btn" data-discipline="armorsmith"><img src="{% static commerce %}commerce/armorsmith.png" height="26" /></button>&nbsp;&nbsp;
             <button type="button" class="filter btn btn-default btn-xs navbar-btn" data-discipline="weaponsmith"><img src="{% static commerce %}commerce/weaponsmith.png" height="26" /></button>&nbsp;&nbsp;
             <button type="button" class="filter btn btn-default btn-xs navbar-btn" data-discipline="tailor"><img src="{% static commerce %}commerce/tailor.png" height="26" /></button>&nbsp;&nbsp;

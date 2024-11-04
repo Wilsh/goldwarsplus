@@ -15,5 +15,6 @@ urlpatterns = [
     path('relist/', views.RelistListView.as_view(), name='relist_list'),
     path('pricechange/', views.PriceChangeView.as_view(), name='pricechange_list'),
     path('crafting/custom/', views.CustomCraftingProfitDelayListView.as_view(), name='customcraftingprofitdelay_list'),
+    path('crafting/custom/experiments/', views.CustomCraftingProfitDelayListView2.as_view(), name='customcraftingprofitdelay_list2'),
     path('crafting/test/', views.TestListView.as_view(), name='test_list'),
 ]

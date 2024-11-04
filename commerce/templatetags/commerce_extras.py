@@ -40,6 +40,11 @@ def show_coins(value):
     return {'context': coin_list}
 
 @register.filter
+def is_relic(item):
+    '''Return whether the given Item is a relic (all relic Item names start with "Relic of ...")'''
+    return True if item.name.find('Relic', 0, 5) == 0 else False
+
+@register.filter
 def get_item(dictionary, key):
     '''Allow dictionary lookups by variable in templates'''
     return dictionary.get(key)
