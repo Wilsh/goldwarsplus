@@ -82,7 +82,7 @@ def update_succeeded():
 def get_api_data(url_postfix, context):
     '''Return decoded json object from GW2 API. Will retry API call if HTTPError occurs'''
     req = Request('https://api.guildwars2.com/v2/' + url_postfix)
-    retries = 15
+    retries = 10
     while True:
         try:
             response = urlopen(req)
@@ -91,6 +91,7 @@ def get_api_data(url_postfix, context):
             retries -= 1
             if retries == 0:
                 print('Aborting API call: too many failed attempts')
+                print('API call that failed: https://api.guildwars2.com/v2/' + url_postfix)
                 context['api_error'] = e
                 break
             print('API call failed. Retries remaining: ' + str(retries))
@@ -106,7 +107,7 @@ def get_api_data(url_postfix, context):
                     del context['api_error']
                 except KeyError:
                     pass
-                if retries < 15:
+                if retries < 10:
                     print('API retry successful')
                 return json.loads(response.read().decode('utf-8'))
             except Exception as e:
@@ -192,7 +193,7 @@ def get_api_objects(api_endpoint, context):
                             '94111', '94440', '94388', '94426', '94918', '94916', '94915', '94909', 
                             '95066', '95042', '95257', '95250', '95400', '95372', '95357', '98209', 
                             '98202', '98177', '98182', '98206', '98196', '98200', '98612', '98697',
-                            '99048', '99081', '99841', '99835', '99931', '101084',
+                            '99048', '99081', '99841', '99835', '99931', '101084', 
                             ]
                         if str(object['output_item_id']) in known_bad:
                             #ignore known error in api
@@ -258,6 +259,8 @@ def find_listed_items(context):
                 print('Item ' + str(item) + ' does not exist')
             continue
         if not update.seen_on_trading_post:
+            if item == 36061 or item == 36060: #broken item in API (temporary?)
+                continue
             update.seen_on_trading_post = True
             update.save()
             new_economic_entry = EconomicsForItem(for_item=update)
