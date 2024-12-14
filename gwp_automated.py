@@ -259,8 +259,6 @@ def find_listed_items(context):
                 print('Item ' + str(item) + ' does not exist')
             continue
         if not update.seen_on_trading_post:
-            if item == 36061 or item == 36060: #broken item in API (temporary?)
-                continue
             update.seen_on_trading_post = True
             update.save()
             new_economic_entry = EconomicsForItem(for_item=update)
@@ -371,7 +369,9 @@ def calculate_recipe_cost(item_queryset, skip_limited_production=False):
     num_updated = 0
     for item in item_queryset:
         try:
-            result = item.economicsforitem.set_cost_by_meta()
+            economics = item.economicsforitem
+            result = economics.set_cost_by_meta() #set_cost_by_meta() must be saved manually
+            economics.save()
         except ObjectDoesNotExist:
             print(f"Invalid Item in queryset given to calculate_recipe_cost(): EconomicsForItem does not exist for item {item}")
             continue

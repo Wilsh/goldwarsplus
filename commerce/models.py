@@ -195,7 +195,7 @@ class EconomicsForItem(models.Model):
     
     def set_cost_by_meta(self):
         '''Calculate the cost to obtain the related Item based on and determine whether it 
-        should be crafted or bought. This info is not saved automatically.
+        should be crafted or bought. This info is not saved automatically (WHY NOT I FORGOR).
         This method differs from Item.buy_or_craft() in three important ways:
             1) it runs iteratively instead of recursively
             2) it requires up-to-date information for Items below this Item's meta level

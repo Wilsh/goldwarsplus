@@ -96,7 +96,7 @@ class CustomCraftingProfitDelayListView(generic.ListView):
         c = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='trailblazer').exclude(delayed_crafting_profit__lte=17000)
         d = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='sinister').exclude(delayed_crafting_profit__lte=14000)
         e = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='marauder').exclude(delayed_crafting_profit__lte=14000)
-        f = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='relic').exclude(delayed_crafting_profit__lte=20000)
+        f = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name__icontains='relic').exclude(delayed_crafting_profit__lte=12000)
         return a.union(b, c, d, e, f).order_by('-delayed_crafting_profit')
     
     def get_context_data(self, **kwargs):
