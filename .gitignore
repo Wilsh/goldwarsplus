@@ -14,3 +14,4 @@ commerce/migrations/*
 __pycache__
 *.bak
 test.py
+script_info.json
