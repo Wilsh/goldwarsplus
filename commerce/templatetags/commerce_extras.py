@@ -1,9 +1,11 @@
+import os
 import json
 import time
 from datetime import datetime, timedelta
 
 from django import template
 from django.utils import timezone
+from django.conf import settings
 from django.utils.html import format_html
 from commerce.models import Item
 
