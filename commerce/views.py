@@ -21,7 +21,10 @@ class HomeView(TemplateView):
         context = super(HomeView, self).get_context_data(**kwargs)
         #get a random item
         id_list = Item.objects.values_list('item_id', flat=True)
-        context['item_info'] = Item.objects.filter(item_id=random.choice(id_list))[0]
+        if id_list.exists():
+            context['item_info'] = Item.objects.filter(item_id=random.choice(id_list))[0]
+        else:
+            context['item_info'] = None
         #get item and recipe count
         context['count'] = [Item.objects.count(), Recipe.objects.count()]
         return context
