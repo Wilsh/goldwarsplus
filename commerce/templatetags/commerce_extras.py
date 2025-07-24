@@ -1,6 +1,5 @@
 import json
 import time
-#import dateutil.parser #update to python 3.7 to use datetime.fromisoformat() instead of this
 from datetime import datetime, timedelta
 
 from django import template
@@ -13,11 +12,10 @@ register = template.Library()
 @register.inclusion_tag('commerce/format_status.html')
 def get_database_status():
     '''Display a status based on when the database was last updated'''
-    LOG_FILE = '/home/turbobear/gwplog/script_log.txt' #created by gwp_automated.py
+    LOG_FILE = os.path.join(settings.BASE_DIR, "script_info.json") #created by gwp_automated.py
     try:
         with open(LOG_FILE, 'r') as f:
             info = json.load(f)
-            #last_update = dateutil.parser.parse(info['last_update'])
             last_update = datetime.fromisoformat(info['last_update'])
     except Exception:
         return {'status': 'error'}

@@ -30,8 +30,8 @@ from queue import Queue
 
 from commerce.models import Item, ItemFlag, EconomicsForItem, Icon, Recipe, EconomicsForRecipe, RecipeDiscipline, RecipeIngredient, BuyListing, SellListing
 
-LOG_FILE = "/home/turbobear/gwplog/script_log.txt"
-DJANGO_BASE = "/home/turbobear/website/website/" #location of manage.py
+LOG_FILE = os.path.join(settings.BASE_DIR, "script_info.json")
+DJANGO_BASE = os.path.join(settings.BASE_DIR, "") #location of manage.py
 
 script_info = {
         "last_update": timezone.now() - timedelta(days=1),
