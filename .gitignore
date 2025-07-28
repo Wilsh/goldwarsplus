@@ -9,7 +9,7 @@ manage.py
 /static
 website
 pyvenv.cfg
-commerce/static/commerce/items/*
+commerce/static/commerce/items/*.png
 commerce/migrations/*
 __pycache__
 *.bak
