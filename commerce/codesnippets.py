@@ -1,3 +1,52 @@
+#add crafting items that can be purchased from a vendor
+vendor_items = [ #[item_id, vendor_price]
+    [76839, 56],
+    [62942, 8],
+    [46747, 150],
+    [19924, 48],
+    [19794, 24],
+    [19793, 32],
+    [19792, 8],
+    [19791, 48],
+    [19790, 64],
+    [19789, 16],
+    [19750, 16],
+    [19704, 8],
+    [13010, 496],
+    [13009, 100000],
+    [13008, 20000],
+    [13007, 5000],
+    [13006, 1480],
+    [12156, 8]
+]
+for entry in vendor_items:
+    item = Item.objects.get(item_id=entry[0])
+    item.can_purchase_from_vendor = True
+    item.vendor_price = entry[1]
+    item.save()
+
+#set limited production flag for EconomicsForRecipe objects
+limited_items = ['Clay Pot', 'Grow Lamp', 'Plate of Meaty Plant Food', 'Plate of Piquant Plant Food',
+                'Vial of Maize Balm', 'Glob of Elder Spirit Residue', 'Lump of Mithrillium', 
+                'Spool of Silk Weaving Thread', 'Spool of Thick Elonian Cord', 'Heat Stone',
+                'Dragon Hatchling Doll Adornments', 'Dragon Hatchling Doll Eye', 'Dragon Hatchling Doll Frame',
+                'Dragon Hatchling Doll Hide', 'Gossamer Stuffing'
+                ]
+for name in limited_items:
+    a = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name=name)
+    if a.count() > 1:
+        for b in a:
+            entry = b
+    else:
+        entry = a[0]
+    entry.limited_production = True
+    entry.num_limited_production_items = 1
+    entry.save()
+for entry in EconomicsForRecipe.objects.all():
+    if entry.set_limited_production():
+        entry.num_limited_production_items = entry.count_limited_production_items()
+        entry.save()
+
 #find crafting_meta_level for an Item object
 def get_meta_level(item, depth=0):
     recipes = item.recipe_set.all()
@@ -31,28 +80,6 @@ for item in Item.objects.filter(seen_on_trading_post=True):
         new_economic_entry.save()
         updated += 1
 print(updated)
-
-#set limited production flag for EconomicsForRecipe objects
-limited_items = ['Clay Pot', 'Grow Lamp', 'Plate of Meaty Plant Food', 'Plate of Piquant Plant Food',
-                'Vial of Maize Balm', 'Glob of Elder Spirit Residue', 'Lump of Mithrillium', 
-                'Spool of Silk Weaving Thread', 'Spool of Thick Elonian Cord', 'Heat Stone',
-                'Dragon Hatchling Doll Adornments', 'Dragon Hatchling Doll Eye', 'Dragon Hatchling Doll Frame',
-                'Dragon Hatchling Doll Hide', 'Gossamer Stuffing'
-                ]
-for name in limited_items:
-    a = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name=name)
-    if a.count() > 1:
-        for b in a:
-            entry = b
-    else:
-        entry = a[0]
-    entry.limited_production = True
-    entry.num_limited_production_items = 1
-    entry.save()
-for entry in EconomicsForRecipe.objects.all():
-    if entry.set_limited_production():
-        entry.num_limited_production_items = entry.count_limited_production_items()
-        entry.save()
 
 #populate.py
 def print_crafting_tree(context):

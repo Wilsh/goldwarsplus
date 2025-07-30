@@ -7,6 +7,9 @@
 #Approximately every five minutes, it refreshes the most relevant
 #Trading Post data.
 
+#After first running this script to populate a new database, execute 
+#the first two code blocks in codesnippets.py to complete the setup.
+
 import os
 os.system("export DJANGO_SETTINGS_MODULE=website.settings")
 
