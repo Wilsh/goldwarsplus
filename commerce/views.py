@@ -1,6 +1,7 @@
 from django.http import HttpResponse
 from django.utils import timezone
 from django.views import generic
+from django.conf import settings
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 import requests
@@ -105,7 +106,7 @@ class CustomCraftingProfitDelayListView(generic.ListView):
     def get_context_data(self, **kwargs):
         context = super(CustomCraftingProfitDelayListView, self).get_context_data(**kwargs)
         #get TP listed items using API key
-        API_KEY = 'BFB61861-2731-2643-A6CB-8AFD679021DF57D52DBC-E62F-4BEE-A25F-C0DF639C7FDD'
+        API_KEY = settings.API_KEY
         base_url = 'https://api.guildwars2.com'
         url = base_url + '/v2/commerce/transactions/current/sells?page_size=200'
         headers = {'Authorization': 'Bearer ' + API_KEY}
