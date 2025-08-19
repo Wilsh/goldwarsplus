@@ -366,7 +366,7 @@ def get_commerce_listings(item_queryset, begin=0, meta_level=0):
             processing = False
     #context['total_commerce_listings_updated'] = total_updated
 
-def calculate_recipe_cost(item_queryset, skip_limited_production=False):
+def calculate_recipe_cost(item_queryset):
     '''For each Item in the given QuerySet, calculate the lowest cost of the ingredients 
     needed to craft the Item if that cost is lower than just buying the Item. Save that 
     cost in the EconomicsForRecipe for the Item. Calculate the profit from crafting the Item'''
@@ -398,16 +398,21 @@ def calculate_recipe_cost(item_queryset, skip_limited_production=False):
                 num_updated += 1
                 item.historically_profitable = True
                 item.save()
-    '''if not skip_limited_production:
-        for economics in EconomicsForRecipe.objects.filter(limited_production=True):
-            try: 
-                economics.limited_production_profit_ratio = int(economics.delayed_crafting_profit / economics.num_limited_production_items)
-                economics.save()
-            except ZeroDivisionError:
-                print("Division by zero error in Recipe: " + str(economics.for_recipe))
-                continue'''
     #context['profitable_recipes_found'] = num_updated
     #update_succeeded() **moved to end of queue execution**
+    
+def calculate_limited_recipes():
+    '''Calculate profits for Recipes that require time-gated Items'''
+    for economics in EconomicsForRecipe.objects.filter(limited_production=True):
+        try:
+            if economics.for_recipe.output_item_id.seen_on_trading_post == True:
+                economics.limited_production_profit_ratio = int(economics.delayed_crafting_profit / economics.num_limited_production_items)
+            else:
+                economics.limited_production_profit_ratio = 0
+            economics.save()
+        except ZeroDivisionError:
+            print("Division by zero error in Recipe: " + str(economics.for_recipe) + ". Its EconomicsForRecipe is flagged for limited production but quantity of limited Items is zero")
+            continue
 
 def get_new_items():
     '''Check the API for previously unseen Items and Recipes'''
@@ -500,10 +505,10 @@ def update_item_queryset(item_queryset, calculate_queryset, meta_level=0, begin=
         calculate_subset = calculate_queryset.filter(crafting_meta_level=meta_level)
     #wait for final recipe calculation
     queryset_queue.join()
+    calculate_limited_recipes()
     update_succeeded()
 
 setup_script_info()
-requires_update = False
 while True:
     a = timezone.now()
     if should_check_for_items():
@@ -511,7 +516,6 @@ while True:
     if should_full_tp_update():
         print("Updating all item prices on trading post")
         update_and_calculate_all()
-        requires_update = True
         print("Finished updating all item prices")
     else:
         print("Updating limited item prices on trading post")
