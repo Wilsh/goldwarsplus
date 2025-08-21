@@ -4,7 +4,7 @@ goldwarsplus
 A Django-based web app that analyzes trading post data from the Guild Wars 2 API
 
 
-Django 4.2
+Django 5.2
 
 Python 3.10
 
