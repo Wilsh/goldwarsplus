@@ -34,14 +34,10 @@ limited_items = ['Clay Pot', 'Grow Lamp', 'Plate of Meaty Plant Food', 'Plate of
                 ]
 for name in limited_items:
     a = EconomicsForRecipe.objects.filter(for_recipe__output_item_id__name=name)
-    if a.count() > 1:
-        for b in a:
-            entry = b
-    else:
-        entry = a[0]
-    entry.limited_production = True
-    entry.num_limited_production_items = 1
-    entry.save()
+    for entry in a:
+        entry.limited_production = True
+        entry.num_limited_production_items = 1
+        entry.save()
 for entry in EconomicsForRecipe.objects.all():
     if entry.set_limited_production():
         entry.num_limited_production_items = entry.count_limited_production_items()
