@@ -19,7 +19,7 @@
     {% for item in item_list %}
         <tr class="{{ item.for_item.rarity|lower }}">
             <td class="text-left">{{ item.for_item.item_id }}</td>
-            <td class="text-left"><img src="{% static commerce %}commerce/items/{{ item.for_item.icon.static_id }}" height="30" width="30" alt="item icon" />
+            <td class="text-left"><img src="{% static item.for_item.icon.static_path %}" height="30" width="30" alt="item icon" />
             <td class="text-left"><a href="{% url 'commerce:item_detail' item.for_item.item_id %}"><strong>{{ item.for_item.name }}</strong></a></td>
             <td>{{ item.for_item.type }}</td>
             <td>{{ item.for_item.level }}</td>

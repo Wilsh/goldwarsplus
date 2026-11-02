@@ -8,7 +8,7 @@
     {{ line.0 }} 
     {{ line.1 }} 
     {{ line.2 }} 
-    <img src="{% static commerce %}commerce/items/{{ item.icon.static_id }}" height="25" width="25" alt="item icon" /> 
+    <img src="{% static item.icon.static_path %}" height="25" width="25" alt="item icon" /> 
     <a href="{% url 'commerce:item_detail' item.item_id %}"><strong>{{ item.name }}</strong></a>
     for {{ line.4 }}
     </td></tr>
@@ -29,7 +29,7 @@
             {% with item=entry|get_item_model_by_id %}
             <tr class="{{ item.rarity|lower }}">
                 <td class="text-right">{{ context.1|get_item:entry }}</td>
-                <td class="text-right"><img src="{% static commerce %}commerce/items/{{ item.icon.static_id }}" height="25" width="25" alt="item icon" /></td>
+                <td class="text-right"><img src="{% static item.icon.static_path %}" height="25" width="25" alt="item icon" /></td>
                 <td class="text-left"><a href="{% url 'commerce:item_detail' item.item_id %}"><strong>{{ item.name }}</strong></a></td>
             </tr>
             {% endwith %}

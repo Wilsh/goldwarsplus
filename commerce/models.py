@@ -270,6 +270,10 @@ class Icon(models.Model):
     url = models.CharField(primary_key=True, max_length=120)
     static_id = models.CharField(max_length=36, default='unknown.png')
     
+    @property
+    def static_path(self):
+        return f"commerce/items/{self.static_id}"
+    
     def __str__(self):
         return "Icon for Items " + self.static_id
     

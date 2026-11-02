@@ -16,7 +16,11 @@
         <dt>Disciplines:</dt><dd>
             {% for discipline, exists in recipe_info.recipediscipline.get_disciplines %}
                 {% if exists %}
-                    <img src="{% static commerce %}commerce/{{ discipline|lower }}.png" height="26" alt="{{ discipline|lower }} icon" />
+                    {% with filename=discipline|lower|add:".png" %}
+                        {% with path="commerce/"|add:filename %}
+                            <img src="{% static path %}" height="26" alt="{{ discipline|lower }} icon" />
+                        {% endwith %}
+                    {% endwith %}
                 {% endif %}
             {% endfor %}
             </dd>
@@ -36,7 +40,7 @@
                 </tr>
                 {% for ingredient in recipe_info.recipeingredient_set.all %}
                 <tr class="{{ ingredient.item_id.rarity|lower }}">
-                    <td class="text-left"><img src="{% static commerce %}commerce/items/{{ ingredient.item_id.icon.static_id }}" height="25" width="25" alt="item icon" /></td>
+                    <td class="text-left"><img src="{% static ingredient.item_id.icon.static_path %}" height="25" width="25" alt="item icon" /></td>
                     <td class="text-left"><a href="{% url 'commerce:item_detail' ingredient.item_id.item_id %}"><strong>{{ ingredient.item_id.name }}</strong></a></td>
                     <td class="text-left">{{ ingredient.count }}</td>
                     <td>

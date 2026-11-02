@@ -19,7 +19,7 @@
     <h3 class="{{ item_info.rarity|lower }}">{{ item_info.name }}</h3>
     <dl class="dl-horizontal">
         <dt>Item ID:</dt><dd>{{ item_info.item_id }}</dd>
-        <dt>Icon:</dt><dd><img src="{% static commerce %}commerce/items/{{ item_info.icon.static_id }}" height="35" width="35" alt="item icon" /></dd>
+        <dt>Icon:</dt><dd><img src="{% static item_info.icon.static_path %}" height="35" width="35" alt="item icon" /></dd>
         <dt>Chat Link:</dt><dd>{{ item_info.chat_link }}</dd>
         <dt>Description:</dt><dd>{{ item_info.description }}</dd>
         <dt>Type:</dt><dd>{{ item_info.type }}</dd>
@@ -48,9 +48,11 @@
             <dt>Number Created</dt><dd>{{ recipe.output_item_count }}</dd>
             <dt>Disciplines:</dt><dd>
                 {% for discipline, exists in recipe.recipediscipline.get_disciplines %}
-                    {% if exists %}
-                        <img src="{% static commerce %}commerce/{{ discipline|lower }}.png" height="26" alt="{{ discipline|lower }} icon" />
-                    {% endif %}
+                    {% with filename=discipline|lower|add:".png" %}
+                        {% with path="commerce/"|add:filename %}
+                            <img src="{% static path %}" height="26" alt="{{ discipline|lower }} icon" />
+                        {% endwith %}
+                    {% endwith %}
                 {% endfor %}
                 </dd>
             <dt>Minimum Rating</dt><dd>{{ recipe.min_rating }}</dd>
@@ -71,7 +73,7 @@
                     </tr>
                     {% for ingredient in recipe.recipeingredient_set.all %}
                     <tr class="{{ ingredient.item_id.rarity|lower }}">
-                        <td class="text-right"><img src="{% static commerce %}commerce/items/{{ ingredient.item_id.icon.static_id }}" height="25" width="25" alt="item icon" /></td>
+                        <td class="text-right"><img src="{% static ingredient.item_id.icon.static_path %}" height="25" width="25" alt="item icon" /></td>
                         <td class="text-left"><a href="{% url 'commerce:item_detail' ingredient.item_id.item_id %}"><strong>{{ ingredient.item_id.name }}</strong></a></td>
                         <td class="text-left">{{ ingredient.count }}</td>
                         <td>

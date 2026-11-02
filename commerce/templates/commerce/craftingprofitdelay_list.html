@@ -19,14 +19,18 @@
         </tr>
     {% for recipe in recipe_list %}
         <tr class="{{ recipe.for_recipe.output_item_id.rarity|lower }}">
-            <td class="text-left"><img src="{% static commerce %}commerce/items/{{ recipe.for_recipe.output_item_id.icon.static_id }}" height="30" width="30" alt="item icon" />
+            <td class="text-left"><img src="{% static recipe.for_recipe.output_item_id.icon.static_path %}" height="30" width="30" alt="item icon" />
             <td class="text-left"><a href="{% url 'commerce:item_detail' recipe.for_recipe.output_item_id.item_id %}"><strong>{{ recipe.for_recipe.output_item_id.name }}</strong></a></td>
             <td class="text-right">{% show_coins recipe.delayed_crafting_profit %}</td>
             <td class="text-right">{% show_coins recipe.for_recipe.output_item_id.get_market_buy %}</td>
             <td class="text-right">
                 {% for discipline, exists in recipe.for_recipe.recipediscipline.get_disciplines %}
                     {% if exists %}
-                        <img src="{% static commerce %}commerce/{{ discipline|lower }}.png" height="26" alt="{{ discipline|lower }} icon" />
+                        {% with filename=discipline|lower|add:".png" %}
+                            {% with path="commerce/"|add:filename %}
+                                <img src="{% static path %}" height="26" alt="{{ discipline|lower }} icon" />
+                            {% endwith %}
+                        {% endwith %}
                     {% endif %}
                 {% endfor %}
             </td>

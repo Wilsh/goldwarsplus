@@ -44,14 +44,18 @@
                     {% endwith %}
                 {% endif %}
             </td>
-            <td class="text-left"><img src="{% static commerce %}commerce/items/{{ recipe.for_recipe.output_item_id.icon.static_id }}" height="30" width="30" alt="item icon" />
+            <td class="text-left"><img src="{% static recipe.for_recipe.output_item_id.icon.static_path %}" height="30" width="30" alt="item icon" /></td>
             <td class="name text-left"><a href="{% url 'commerce:item_detail' recipe.for_recipe.output_item_id.item_id %}"><strong>{{ recipe.for_recipe.output_item_id.name }}</strong></a></td>
             <td class="text-right">{% show_coins recipe.delayed_crafting_profit %}</td>
             <td class="text-right">{% show_coins recipe.for_recipe.output_item_id.get_market_buy %}</td>
             <td class="text-right">
                 {% for discipline, exists in recipe.for_recipe.recipediscipline.get_disciplines %}
                     {% if exists %}
-                        <img src="{% static commerce %}commerce/{{ discipline|lower }}.png" height="26" alt="{{ discipline|lower }} icon" />
+                        {% with filename=discipline|lower|add:".png" %}
+                            {% with path="commerce/"|add:filename %}
+                                <img src="{% static path %}" height="26" alt="{{ discipline|lower }} icon" />
+                            {% endwith %}
+                        {% endwith %}
                     {% endif %}
                 {% endfor %}
             </td>
@@ -86,13 +90,13 @@
         <div class="container">
             <button id="reset" type="button" class="btn btn-default btn-sm navbar-btn">Reset</button>&nbsp;&nbsp;
             <button id="top" type="button" class="btn btn-default btn-sm navbar-btn">Top</button>&nbsp;&nbsp;
-            <button type="button" class="filter btn btn-default btn-xs navbar-btn" data-discipline="relic"><img src="{% static commerce %}commerce/relic.png" height="26" /></button>&nbsp;&nbsp;
-            <button type="button" class="filter btn btn-default btn-xs navbar-btn" data-discipline="armorsmith"><img src="{% static commerce %}commerce/armorsmith.png" height="26" /></button>&nbsp;&nbsp;
-            <button type="button" class="filter btn btn-default btn-xs navbar-btn" data-discipline="weaponsmith"><img src="{% static commerce %}commerce/weaponsmith.png" height="26" /></button>&nbsp;&nbsp;
-            <button type="button" class="filter btn btn-default btn-xs navbar-btn" data-discipline="tailor"><img src="{% static commerce %}commerce/tailor.png" height="26" /></button>&nbsp;&nbsp;
-            <button type="button" class="filter btn btn-default btn-xs navbar-btn" data-discipline="huntsman"><img src="{% static commerce %}commerce/huntsman.png" height="26" /></button>&nbsp;&nbsp;
-            <button type="button" class="filter btn btn-default btn-xs navbar-btn" data-discipline="leatherworker"><img src="{% static commerce %}commerce/leatherworker.png" height="26" /></button>&nbsp;&nbsp;
-            <button type="button" class="filter btn btn-default btn-xs navbar-btn" data-discipline="artificer"><img src="{% static commerce %}commerce/artificer.png" height="26" /></button>
+            <button type="button" class="filter btn btn-default btn-xs navbar-btn" data-discipline="relic"><img src="{% static 'commerce/relic.png' %}" height="26" /></button>&nbsp;&nbsp;
+            <button type="button" class="filter btn btn-default btn-xs navbar-btn" data-discipline="armorsmith"><img src="{% static 'commerce/armorsmith.png' %}" height="26" /></button>&nbsp;&nbsp;
+            <button type="button" class="filter btn btn-default btn-xs navbar-btn" data-discipline="weaponsmith"><img src="{% static 'commerce/weaponsmith.png' %}" height="26" /></button>&nbsp;&nbsp;
+            <button type="button" class="filter btn btn-default btn-xs navbar-btn" data-discipline="tailor"><img src="{% static 'commerce/tailor.png' %}" height="26" /></button>&nbsp;&nbsp;
+            <button type="button" class="filter btn btn-default btn-xs navbar-btn" data-discipline="huntsman"><img src="{% static 'commerce/huntsman.png' %}" height="26" /></button>&nbsp;&nbsp;
+            <button type="button" class="filter btn btn-default btn-xs navbar-btn" data-discipline="leatherworker"><img src="{% static 'commerce/leatherworker.png' %}" height="26" /></button>&nbsp;&nbsp;
+            <button type="button" class="filter btn btn-default btn-xs navbar-btn" data-discipline="artificer"><img src="{% static 'commerce/artificer.png' %}" height="26" /></button>
         </div>
     </nav>
     </div>
