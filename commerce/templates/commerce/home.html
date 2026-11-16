@@ -55,11 +55,13 @@
             <dt>Number Created</dt><dd>{{ recipe.output_item_count }}</dd>
             <dt>Disciplines:</dt><dd>
                 {% for discipline, exists in recipe.recipediscipline.get_disciplines %}
-                    {% with filename=discipline|lower|add:".png" %}
-                        {% with path="commerce/"|add:filename %}
-                            <img src="{% static path %}" height="26" alt="{{ discipline|lower }} icon" />
+                    {% if exists %}
+                        {% with filename=discipline|lower|add:".png" %}
+                            {% with path="commerce/"|add:filename %}
+                                <img src="{% static path %}" height="26" alt="{{ discipline|lower }} icon" />
+                            {% endwith %}
                         {% endwith %}
-                    {% endwith %}
+                    {% endif %}
                 {% endfor %}
                 </dd>
             <dt>Minimum Rating</dt><dd>{{ recipe.min_rating }}</dd>
